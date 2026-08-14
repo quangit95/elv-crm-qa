@@ -14,7 +14,7 @@ export async function generateQuotationPDF(quotation: any, company: any): Promis
     doc.on('data', buffers.push.bind(buffers))
     doc.on('end', () => {
       const pdfData = Buffer.concat(buffers)
-      resolve(new NextResponse(pdfData, {
+      resolve(new NextResponse(pdfData as unknown as BodyInit, {
         headers: {
           'Content-Type': 'application/pdf',
           'Content-Disposition': `inline; filename=Quotation-${quotation.code}.pdf`

@@ -13,7 +13,7 @@ export async function generateContractPDF(contract: any, company: any): Promise<
     doc.on('data', buffers.push.bind(buffers))
     doc.on('end', () => {
       const pdfData = Buffer.concat(buffers)
-      resolve(new NextResponse(pdfData, {
+      resolve(new NextResponse(pdfData as unknown as BodyInit, {
         headers: {
           'Content-Type': 'application/pdf',
           'Content-Disposition': `inline; filename=Contract-${contract.code}.pdf`

@@ -143,7 +143,7 @@ export async function generateContractWord(contract: any, company: any) {
 
   const buffer = await Packer.toBuffer(doc);
   
-  return new NextResponse(buffer, {
+  return new Response(buffer, {
     headers: {
       'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'Content-Disposition': `attachment; filename=Contract-${contract.code}.docx`

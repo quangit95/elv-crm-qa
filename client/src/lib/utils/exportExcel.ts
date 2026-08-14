@@ -229,7 +229,7 @@ export async function generateQuotationExcel(quotation: any, company: any) {
   sheet.getCell(`A${rowIndex}`).value = '- Báo giá này có giá trị trong vòng 30 ngày'
 
   const buffer = await workbook.xlsx.writeBuffer();
-  return new NextResponse(buffer, {
+  return new NextResponse(buffer as unknown as BodyInit, {
     headers: {
       'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'Content-Disposition': `attachment; filename=Quotation-${quotation.code}.xlsx`
