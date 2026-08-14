@@ -28,7 +28,11 @@ export function Topbar() {
     <header className="flex h-14 items-center justify-between border-b bg-white px-4 dark:bg-zinc-950 dark:border-zinc-800">
       <div className="flex items-center gap-2 lg:hidden">
         <Sheet>
-          <SheetTrigger className="flex h-9 w-9 items-center justify-center rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 md:hidden">
+          <SheetTrigger
+            render={
+              <button className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 md:hidden" />
+            }
+          >
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle Menu</span>
           </SheetTrigger>

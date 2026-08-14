@@ -27,7 +27,7 @@ export function CompanyForm() {
 
   const fetchCompany = async () => {
     try {
-      const res = await fetch("http://localhost:3001/api/settings/company");
+      const res = await fetch("/api/settings/company");
       if (res.ok) {
         const data = await res.json();
         setFormData({
@@ -59,7 +59,7 @@ export function CompanyForm() {
     uploadData.append("logo", file);
 
     try {
-      const res = await fetch("http://localhost:3001/api/settings/upload-logo", {
+      const res = await fetch("/api/settings/upload-logo", {
         method: "POST",
         body: uploadData,
       });
@@ -67,7 +67,7 @@ export function CompanyForm() {
       if (res.ok) {
         const data = await res.json();
         // Cập nhật logo url, nối thêm domain nếu backend trả về đường dẫn tương đối
-        const logoUrl = data.url.startsWith("/") ? `http://localhost:3001${data.url}` : data.url;
+        const logoUrl = data.url;
         setFormData((prev) => ({ ...prev, logo: logoUrl }));
         setMessage({ type: "success", text: "Tải logo lên thành công! Hãy nhấn Lưu thay đổi." });
       } else {
@@ -91,7 +91,7 @@ export function CompanyForm() {
     setMessage({ type: "", text: "" });
 
     try {
-      const res = await fetch("http://localhost:3001/api/settings/company", {
+      const res = await fetch("/api/settings/company", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

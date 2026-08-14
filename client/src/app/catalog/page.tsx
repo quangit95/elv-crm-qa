@@ -259,7 +259,7 @@ export default function CatalogPage() {
                   <Label>Hình ảnh sản phẩm</Label>
                   <div className="flex items-center gap-4">
                     {formData.image && (
-                      <img src={`http://localhost:3001${formData.image}`} alt="Preview" className="w-16 h-16 object-cover rounded border" />
+                      <img src={formData.image} alt="Preview" className="w-16 h-16 object-cover rounded border" />
                     )}
                     <Input type="file" accept="image/*" onChange={async (e) => {
                       const file = e.target.files?.[0];

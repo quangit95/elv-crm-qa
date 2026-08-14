@@ -22,7 +22,7 @@ export function AccountForm() {
 
   const fetchAccount = async () => {
     try {
-      const res = await fetch("http://localhost:3001/api/settings/account");
+      const res = await fetch("/api/settings/account");
       if (res.ok) {
         const data = await res.json();
         setFormData((prev) => ({ ...prev, email: data.email || "" }));
@@ -51,7 +51,7 @@ export function AccountForm() {
     setMessage({ type: "", text: "" });
 
     try {
-      const res = await fetch("http://localhost:3001/api/settings/account", {
+      const res = await fetch("/api/settings/account", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

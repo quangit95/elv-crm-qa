@@ -12,7 +12,7 @@ export function Sidebar() {
   const [company, setCompany] = useState<{ name: string; logo: string | null }>({ name: "ELV CRM PRO", logo: null });
 
   useEffect(() => {
-    fetch("http://localhost:3001/api/settings/company")
+    fetch("/api/settings/company")
       .then(res => res.json())
       .then(data => {
         if (data) setCompany({ name: data.name || "ELV CRM PRO", logo: data.logo || null });

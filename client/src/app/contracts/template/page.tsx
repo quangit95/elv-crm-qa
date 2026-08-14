@@ -70,7 +70,7 @@ export default function ContractTemplatePage() {
         </div>
       </div>
 
-      <Card>
+      <Card className="bg-zinc-50 dark:bg-zinc-900">
         <CardHeader>
           <CardTitle>Nội dung điều khoản</CardTitle>
           <CardDescription>
@@ -78,16 +78,18 @@ export default function ContractTemplatePage() {
             Bạn có thể tuỳ chỉnh lại nội dung cho từng hợp đồng cụ thể sau.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex justify-center p-6">
           {loading ? (
             <p className="text-sm text-zinc-500">Đang tải...</p>
           ) : (
-            <Textarea 
-              className="min-h-[500px] text-base leading-relaxed" 
-              placeholder="Nhập nội dung các điều khoản hợp đồng mẫu..."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-            />
+            <div className="w-full max-w-3xl bg-white dark:bg-zinc-950 shadow-sm border rounded-sm p-8 md:p-12">
+              <Textarea 
+                className="min-h-[800px] border-none shadow-none text-base leading-relaxed resize-none focus-visible:ring-0 p-0 text-justify" 
+                placeholder="Nhập nội dung các điều khoản hợp đồng mẫu..."
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+              />
+            </div>
           )}
         </CardContent>
       </Card>
