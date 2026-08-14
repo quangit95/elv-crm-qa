@@ -1,0 +1,223 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String?
+  address   String?
+  taxCode   String?
+  logo      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("SALES")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  leads     Lead[]
+  projects  Project[]
+}
+
+
+model Customer {
+  id        String       @id @default(uuid())
+  name      String
+  phone     String?
+  email     String?
+  address   String?
+  type      String       @default("B2C")
+  isActive  Boolean      @default(true)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  leads     Lead[]
+  projects  Project[]
+}
+
+
+model Lead {
+  id          String     @id @default(uuid())
+  title       String
+  status      String     @default("NEW")
+  notes       String?
+  customerId  String
+  customer    Customer   @relation(fields: [customerId], references: [id])
+  assigneeId  String?
+  assignee    User?      @relation(fields: [assigneeId], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  quotations  Quotation[]
+  contracts   Contract[]
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items       CatalogItem[]
+}
+
+model Brand {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items       CatalogItem[]
+}
+
+model Supplier {
+  id            String   @id @default(uuid())
+  name          String
+  contactPerson String?
+  phone         String?
+  email         String?
+  address       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  items         CatalogItem[]
+}
+
+model CatalogItem {
+  id           String   @id @default(uuid())
+  categoryId   String?
+  category     Category? @relation(fields: [categoryId], references: [id])
+  brandId      String?
+  brand        Brand?    @relation(fields: [brandId], references: [id])
+  supplierId   String?
+  supplier     Supplier? @relation(fields: [supplierId], references: [id])
+  model        String?
+  name         String
+  description  String?
+  costPrice    Float    // Giá vốn
+  sellingPrice Float    // Giá niêm yết
+  isActive     Boolean  @default(true) // Trạng thái sử dụng
+  unit         String   // Cái, Cuộn, Mét, Ngày...
+  warranty     Int?     // Số tháng bảo hành
+  image        String?  // Đường dẫn ảnh sản phẩm
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  quotationItems QuotationItem[]
+}
+
+model Quotation {
+  id          String     @id @default(uuid())
+  code        String     @unique // e.g., QT-20231001-01
+  leadId      String
+  lead        Lead       @relation(fields: [leadId], references: [id])
+  totalCost   Float      @default(0)
+  totalAmount Float      @default(0)
+  discount    Float      @default(0) // Số tiền hoặc %
+  tax         Float      @default(10) // 10% VAT
+  grandTotal  Float      @default(0)
+  status      String     @default("DRAFT") // DRAFT, SENT, ACCEPTED, REJECTED
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  sections    QuotationSection[]
+  contract    Contract?
+}
+
+model QuotationSection {
+  id          String   @id @default(uuid())
+  quotationId String
+  quotation   Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  name        String   // VD: "Hệ thống Camera", "Hạ tầng mạng"
+  order       Int      @default(0)
+
+  items       QuotationItem[]
+}
+
+model QuotationItem {
+  id            String   @id @default(uuid())
+  sectionId     String
+  section       QuotationSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  catalogItemId String?
+  catalogItem   CatalogItem? @relation(fields: [catalogItemId], references: [id])
+  name          String   // Cho phép custom name nếu không lấy từ catalog
+  unit          String   @default("Cái")
+  quantity      Int
+  unitPrice     Float
+  costPrice     Float    // Lưu lại giá vốn tại thời điểm báo giá
+  total         Float
+}
+
+// Project & Milestones
+model Project {
+  id          String     @id @default(uuid())
+  name        String
+  customerId  String
+  customer    Customer   @relation(fields: [customerId], references: [id])
+  managerId   String?
+  manager     User?      @relation(fields: [managerId], references: [id])
+  status      String     @default("PLANNING") // PLANNING, IN_PROGRESS, COMPLETED, ON_HOLD
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  milestones  ProjectMilestone[]
+  payments    Payment[]
+}
+
+model ProjectMilestone {
+  id          String   @id @default(uuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name        String   // VD: "1. Đi dây", "2. Lắp đặt"
+  status      String   @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED
+  dueDate     DateTime?
+  order       Int      @default(0)
+}
+
+model Payment {
+  id          String   @id @default(uuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String   // VD: "Tạm ứng 30%", "Quyết toán"
+  amount      Float
+  status      String   @default("PENDING") // PENDING, PAID, OVERDUE
+  dueDate     DateTime?
+  paidDate    DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Contract {
+  id          String     @id @default(uuid())
+  code        String     @unique // e.g., HD-202310-001
+  quotationId String     @unique // 1 quotation can have 1 contract
+  quotation   Quotation  @relation(fields: [quotationId], references: [id])
+  leadId      String
+  lead        Lead       @relation(fields: [leadId], references: [id])
+  totalValue  Float
+  status      String     @default("DRAFT") // DRAFT, SIGNED, COMPLETED, CANCELLED
+  startDate   DateTime?
+  endDate     DateTime?
+  terms       String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
