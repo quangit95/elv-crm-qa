@@ -2,10 +2,12 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { generateQuotationPDF } from '@/lib/utils/exportPdf';
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const resolvedParams = await params;
+    const { id } = await params;
     const quotation = await prisma.quotation.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         lead: { include: { customer: true } },
         sections: { include: { items: { include: { catalogItem: true } } }, orderBy: { order: 'asc' } }

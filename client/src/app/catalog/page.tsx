@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Search, Pencil, Trash2, RotateCcw, Upload, Download } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, RotateCcw, Upload, Download, Sparkles, Image as ImageIcon, Archive } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -50,6 +50,97 @@ export default function CatalogPage() {
   
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  // AI Scanner state
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiFile, setAiFile] = useState<File | null>(null);
+  const [aiPreviewUrl, setAiPreviewUrl] = useState<string>("");
+  const [isAiProcessing, setIsAiProcessing] = useState(false);
+  const [aiExtractedItems, setAiExtractedItems] = useState<any[]>([]);
+
+  const handleProcessAI = async () => {
+    if (!aiFile) return;
+    setIsAiProcessing(true);
+    setAiExtractedItems([]);
+    
+    const formData = new FormData();
+    formData.append("image", aiFile);
+    
+    try {
+      const res = await fetch("/api/catalog/ai-upload", {
+        method: "POST",
+        body: formData
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const items = data.data.map((item: any, idx: number) => ({
+          _key: idx,
+          name: item.name || "",
+          model: item.model || "",
+          costPrice: item.costPrice || 0,
+          sellingPrice: item.costPrice ? Math.round((item.costPrice * 1.3) / 1000) * 1000 : 0,
+          unit: item.unit || "Cái",
+          categoryId: "",
+        }));
+        setAiExtractedItems(items);
+      } else {
+        alert("Lỗi AI: " + data.error);
+      }
+    } catch (e) {
+      alert("Lỗi kết nối máy chủ");
+    } finally {
+      setIsAiProcessing(false);
+    }
+  };
+
+  const handleSaveAiItems = async () => {
+    let newCount = 0;
+    let updatedCount = 0;
+    for (const item of aiExtractedItems) {
+      if (!item.name) continue;
+      
+      const payload = {
+        name: item.name,
+        costPrice: Number(item.costPrice),
+        sellingPrice: Number(item.sellingPrice),
+        unit: item.unit || "Cái",
+        categoryId: item.categoryId || null,
+        warranty: 12,
+        brandId: null,
+        supplierId: null,
+        model: item.model || "",
+        description: "",
+      };
+
+      try {
+        const res = await fetch("/api/catalog", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        
+        if (res.ok) {
+          const json = await res.json();
+          if (json._isUpdated) {
+            updatedCount++;
+          } else {
+            newCount++;
+          }
+        }
+      } catch (e) {
+        console.error("Error saving item", item, e);
+      }
+    }
+    
+    let msg = "";
+    if (newCount > 0) msg += `Đã thêm mới ${newCount} vật tư.\n`;
+    if (updatedCount > 0) msg += `Đã cập nhật lại giá cho ${updatedCount} vật tư tồn tại sẵn.`;
+    if (!msg) msg = "Không có vật tư nào được lưu.";
+    
+    alert(msg.trim());
+    setAiOpen(false);
+    fetchData();
+  };
   
   const [formData, setFormData] = useState({
     name: "",
@@ -162,6 +253,20 @@ export default function CatalogPage() {
     }
   };
 
+  const handleHardDelete = async (id: string) => {
+    if (!confirm("Hành động này sẽ XOÁ VĨNH VIỄN vật tư khỏi cơ sở dữ liệu và không thể khôi phục. Bạn có chắc chắn?")) return;
+    try {
+      const res = await fetch(`/api/catalog/${id}?hard=true`, { method: "DELETE" });
+      if (res.ok) {
+        fetchData();
+      } else {
+        alert("Không thể xoá vật tư này (có thể do đang được sử dụng trong một báo giá/hợp đồng nào đó).");
+      }
+    } catch (error) {
+      alert("Lỗi kết nối máy chủ.");
+    }
+  };
+
   const filteredItems = items.filter(
     (item) => item.name.toLowerCase().includes(search.toLowerCase()) || 
               item.model?.toLowerCase().includes(search.toLowerCase()) ||
@@ -177,6 +282,145 @@ export default function CatalogPage() {
         </div>
         
         <div className="flex gap-2">
+          <Dialog open={aiOpen} onOpenChange={(val) => {
+            setAiOpen(val);
+            if (!val) { setAiFile(null); setAiPreviewUrl(""); setAiExtractedItems([]); }
+          }}>
+            <DialogTrigger render={<Button variant="outline" className="border-purple-200 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20" />}>
+              <Sparkles className="mr-2 h-4 w-4" />
+              Quét Phiếu (AI)
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Trợ lý AI - Quét Hoá đơn / Phiếu Mua Hàng</DialogTitle>
+              </DialogHeader>
+              
+              <div className="space-y-4 py-4">
+                {!aiExtractedItems.length ? (
+                  <>
+                    <div className="flex items-center justify-center w-full">
+                      <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-zinc-50 dark:hover:bg-zinc-800 dark:bg-zinc-900 hover:bg-zinc-100 dark:border-zinc-700">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          {aiPreviewUrl ? (
+                            <img src={aiPreviewUrl} alt="Preview" className="h-48 object-contain mb-2 rounded" />
+                          ) : (
+                            <>
+                              <ImageIcon className="w-8 h-8 mb-4 text-zinc-500" />
+                              <p className="mb-2 text-sm text-zinc-500 font-semibold">Bấm để tải ảnh lên</p>
+                              <p className="text-xs text-zinc-500">PNG, JPG, JPEG (Max 5MB)</p>
+                            </>
+                          )}
+                        </div>
+                        <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setAiFile(file);
+                            setAiPreviewUrl(URL.createObjectURL(file));
+                          }
+                        }} />
+                      </label>
+                    </div>
+                    
+                    <Button 
+                      className="w-full bg-purple-600 hover:bg-purple-700 text-white" 
+                      onClick={handleProcessAI} 
+                      disabled={!aiFile || isAiProcessing}
+                    >
+                      {isAiProcessing ? "Đang phân tích ảnh bằng AI..." : "Tiến hành phân tích (AI)"}
+                    </Button>
+                  </>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="text-sm text-zinc-500">AI đã bóc tách thành công. Vui lòng kiểm tra và chỉnh sửa nếu cần trước khi lưu.</p>
+                    <div className="border rounded-md overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Tên vật tư</TableHead>
+                            <TableHead>Mã/Model</TableHead>
+                            <TableHead>ĐVT</TableHead>
+                            <TableHead className="text-right">Giá nhập</TableHead>
+                            <TableHead className="text-right">Giá bán</TableHead>
+                            <TableHead>Danh mục</TableHead>
+                            <TableHead></TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {aiExtractedItems.map((item, idx) => (
+                            <TableRow key={item._key}>
+                              <TableCell className="p-2">
+                                <Input className="h-8 min-w-[200px]" value={item.name} onChange={e => {
+                                  const newItems = [...aiExtractedItems];
+                                  newItems[idx].name = e.target.value;
+                                  setAiExtractedItems(newItems);
+                                }} />
+                              </TableCell>
+                              <TableCell className="p-2">
+                                <Input className="h-8 min-w-[100px]" value={item.model} onChange={e => {
+                                  const newItems = [...aiExtractedItems];
+                                  newItems[idx].model = e.target.value;
+                                  setAiExtractedItems(newItems);
+                                }} />
+                              </TableCell>
+                              <TableCell className="p-2">
+                                <Input className="h-8 w-[70px]" value={item.unit} onChange={e => {
+                                  const newItems = [...aiExtractedItems];
+                                  newItems[idx].unit = e.target.value;
+                                  setAiExtractedItems(newItems);
+                                }} />
+                              </TableCell>
+                              <TableCell className="p-2">
+                                <Input type="number" className="h-8 w-[100px] text-right" value={item.costPrice} onChange={e => {
+                                  const newItems = [...aiExtractedItems];
+                                  const cost = Number(e.target.value);
+                                  newItems[idx].costPrice = cost;
+                                  newItems[idx].sellingPrice = Math.round((cost * 1.3) / 1000) * 1000;
+                                  setAiExtractedItems(newItems);
+                                }} />
+                              </TableCell>
+                              <TableCell className="p-2">
+                                <Input type="number" className="h-8 w-[100px] text-right" value={item.sellingPrice} onChange={e => {
+                                  const newItems = [...aiExtractedItems];
+                                  newItems[idx].sellingPrice = Number(e.target.value);
+                                  setAiExtractedItems(newItems);
+                                }} />
+                              </TableCell>
+                              <TableCell className="p-2">
+                                <select className="flex h-8 w-[120px] rounded-md border border-input bg-background px-3 py-1 text-xs" value={item.categoryId} onChange={e => {
+                                  const newItems = [...aiExtractedItems];
+                                  newItems[idx].categoryId = e.target.value;
+                                  setAiExtractedItems(newItems);
+                                }}>
+                                  <option value="">-- Danh mục --</option>
+                                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                </select>
+                              </TableCell>
+                              <TableCell className="p-2">
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => {
+                                  setAiExtractedItems(aiExtractedItems.filter((_, i) => i !== idx));
+                                }}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                    <div className="flex justify-end gap-2 mt-4">
+                      <Button variant="outline" onClick={() => {
+                        setAiExtractedItems([]);
+                        setAiFile(null);
+                        setAiPreviewUrl("");
+                      }}>Quét ảnh khác</Button>
+                      <Button onClick={handleSaveAiItems}>Lưu {aiExtractedItems.length} vật tư</Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+
           <Button variant="outline" onClick={() => alert('Tính năng import đang cập nhật cho cấu trúc mới')}>
             <Upload className="mr-2 h-4 w-4" />
             Nhập từ Excel
@@ -361,13 +605,18 @@ export default function CatalogPage() {
                         <Pencil className="h-4 w-4 text-blue-500" />
                       </Button>
                       {viewTab === 'active' ? (
-                        <Button variant="ghost" size="icon" onClick={() => handleArchive(item.id)}>
-                          <Trash2 className="h-4 w-4 text-red-500" />
+                        <Button variant="ghost" size="icon" onClick={() => handleArchive(item.id)} title="Ngừng sử dụng">
+                          <Archive className="h-4 w-4 text-orange-500" />
                         </Button>
                       ) : (
-                        <Button variant="ghost" size="icon" onClick={() => handleRestore(item.id)}>
-                          <RotateCcw className="h-4 w-4 text-green-500" />
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button variant="ghost" size="icon" onClick={() => handleRestore(item.id)} title="Khôi phục">
+                            <RotateCcw className="h-4 w-4 text-green-500" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleHardDelete(item.id)} title="Xóa vĩnh viễn">
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </TableCell>

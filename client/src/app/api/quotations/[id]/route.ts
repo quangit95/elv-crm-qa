@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const resolvedParams = await params;
     const quotation = await prisma.quotation.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       include: {
         lead: { include: { customer: true } },
         sections: {
@@ -20,19 +21,20 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const resolvedParams = await params;
     const { leadId, sections, discount = 0, tax = 10 } = await req.json();
 
     let totalCost = 0;
     let totalAmount = 0;
 
     await prisma.quotationSection.deleteMany({
-      where: { quotationId: params.id }
+      where: { quotationId: resolvedParams.id }
     });
 
     const quotation = await prisma.quotation.update({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       data: {
         leadId,
         discount,
@@ -69,7 +71,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     const grandTotal = totalAmount - discount + (totalAmount - discount) * (tax / 100);
     
     const updatedQuotation = await prisma.quotation.update({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       data: { totalCost, totalAmount, grandTotal },
       include: { sections: { include: { items: true } } }
     });
@@ -81,10 +83,11 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const resolvedParams = await params;
     await prisma.quotation.update({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       data: { isActive: false }
     });
     return NextResponse.json({ success: true });

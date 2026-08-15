@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const resolvedParams = await params;
+    const { id } = await params;
     const contract = await prisma.contract.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         lead: {
           include: {
@@ -22,12 +24,14 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const resolvedParams = await params;
+    const { id } = await params;
     const { status, startDate, endDate, terms } = await req.json();
     
     const updatedContract = await prisma.contract.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         status,
         startDate: startDate ? new Date(startDate) : undefined,
@@ -43,12 +47,14 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const contract = await prisma.contract.findUnique({ where: { id: params.id } });
+    const resolvedParams = await params;
+    const { id } = await params;
+    const contract = await prisma.contract.findUnique({ where: { id } });
     if (contract) {
       await prisma.$transaction(async (tx) => {
-        await tx.contract.delete({ where: { id: params.id } });
+        await tx.contract.delete({ where: { id } });
         await tx.quotation.update({
           where: { id: contract.quotationId },
           data: { status: 'SENT' } // Revert to SENT or similar

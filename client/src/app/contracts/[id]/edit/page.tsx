@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,62 +10,73 @@ import { Save, Sparkles } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-type Quotation = {
-  id: string;
-  code: string;
-  grandTotal: number;
-  leadId: string;
-  lead: {
-    title: string;
-    customer: { name: string };
-  };
-};
-
-export default function NewContractPage() {
+export default function EditContractPage() {
   const router = useRouter();
-  const [quotations, setQuotations] = useState<Quotation[]>([]);
-  
-  const [selectedQuotationId, setSelectedQuotationId] = useState<string>("");
-  const [code, setCode] = useState<string>(`HD-${new Date().getFullYear()}${String(new Date().getMonth()+1).padStart(2, '0')}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`);
+  const params = useParams();
+  const contractId = params?.id as string;
+
+  const [code, setCode] = useState<string>("");
+  const [status, setStatus] = useState<string>("DRAFT");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
-  const [terms, setTerms] = useState<string>("Đang tải điều khoản mẫu...");
+  const [terms, setTerms] = useState<string>("");
+  
+  const [leadTitle, setLeadTitle] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [grandTotal, setGrandTotal] = useState<number>(0);
+  
   const [paymentSplit, setPaymentSplit] = useState<string>("50-50");
 
   useEffect(() => {
-    // Lấy báo giá chưa chốt
-    fetch("/api/quotations")
-      .then(r => r.json())
-      .then(data => {
-        setQuotations(data);
+    if (contractId) {
+      fetch(`/api/contracts/${contractId}`)
+        .then(r => r.json())
+        .then(data => {
+          setCode(data.code || "");
+          setStatus(data.status || "DRAFT");
+          setStartDate(data.startDate ? new Date(data.startDate).toISOString().split('T')[0] : "");
+          setEndDate(data.endDate ? new Date(data.endDate).toISOString().split('T')[0] : "");
+          setTerms(data.terms || "");
+          setLeadTitle(data.lead?.title || "");
+          setCustomerName(data.lead?.customer?.name || "");
+          setGrandTotal(data.quotation?.grandTotal || 0);
+        })
+        .catch(err => {
+          console.error(err);
+          alert("Không thể tải thông tin hợp đồng.");
+        });
+    }
+  }, [contractId]);
+
+  const saveContract = async () => {
+    try {
+      const res = await fetch(`/api/contracts/${contractId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status,
+          startDate,
+          endDate,
+          terms
+        })
       });
       
-    // Lấy điều khoản mẫu
-    fetch("/api/settings/contract-template")
-      .then(r => r.json())
-      .then(data => {
-        if (data && data.content) {
-          setTerms(data.content);
-        } else {
-          setTerms("Điều 1: Nội dung công việc\n\nĐiều 2: Giá trị hợp đồng và Phương thức thanh toán\n\nĐiều 3: Quyền và Nghĩa vụ các bên");
-        }
-      })
-      .catch(err => {
-        console.error("Failed to load contract template:", err);
-        setTerms("");
-      });
-  }, []);
-
-  const selectedQuotation = quotations.find(q => q.id === selectedQuotationId);
+      if (res.ok) {
+        alert("Cập nhật hợp đồng thành công!");
+        router.push("/contracts");
+      } else {
+        const errorData = await res.json();
+        alert(`Lỗi: ${errorData.error}`);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Lỗi khi kết nối tới máy chủ");
+    }
+  };
 
   const formatVND = (num: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
 
   const appendPaymentTerms = () => {
-    if (!selectedQuotation) {
-      alert("Vui lòng chọn Báo giá trước để tính toán giá trị hợp đồng.");
-      return;
-    }
-    const grandTotal = selectedQuotation.grandTotal;
     let newText = `\n\nGiá trị hợp đồng: ${formatVND(grandTotal)}\n`;
     newText += `Phương thức thanh toán:\n`;
     
@@ -92,48 +103,18 @@ export default function NewContractPage() {
     setTerms(prev => prev + newText);
   };
 
-  const saveContract = async () => {
-    if (!selectedQuotationId) return alert("Vui lòng chọn một Báo giá để làm Hợp đồng!");
-    if (!code) return alert("Vui lòng nhập Mã hợp đồng");
-    
-    try {
-      const res = await fetch("/api/contracts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          code,
-          quotationId: selectedQuotationId,
-          startDate,
-          endDate,
-          terms
-        })
-      });
-      
-      if (res.ok) {
-        alert("Khởi tạo Hợp đồng thành công!");
-        router.push("/contracts");
-      } else {
-        const errorData = await res.json();
-        alert(`Lỗi: ${errorData.error}`);
-      }
-    } catch (error) {
-      console.error(error);
-      alert("Lỗi khi kết nối tới máy chủ");
-    }
-  };
-
   return (
     <div className="space-y-6 pb-20">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Tạo Hợp Đồng Mới</h1>
-          <p className="text-zinc-500">Khởi tạo hợp đồng từ Báo giá đã được chốt.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Cập nhật Hợp Đồng</h1>
+          <p className="text-zinc-500">Chỉnh sửa thông tin hợp đồng hiện tại.</p>
         </div>
         <div className="space-x-2">
           <Button variant="outline" onClick={() => router.push("/contracts")}>Huỷ</Button>
           <Button onClick={saveContract} size="lg">
             <Save className="mr-2 h-4 w-4" />
-            Lưu Hợp Đồng
+            Cập nhật Hợp Đồng
           </Button>
         </div>
       </div>
@@ -146,40 +127,39 @@ export default function NewContractPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Mã Hợp đồng (*)</Label>
-                <Input value={code} onChange={e => setCode(e.target.value)} />
+                <Label>Mã Hợp đồng (Chỉ đọc)</Label>
+                <Input value={code} disabled />
               </div>
               
+              <div className="p-3 bg-zinc-50 dark:bg-zinc-900 rounded-md border text-sm space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">Khách hàng:</span>
+                  <span className="font-medium">{customerName}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">Dự án:</span>
+                  <span className="font-medium text-primary">{leadTitle}</span>
+                </div>
+                <div className="flex justify-between border-t pt-2 mt-2">
+                  <span className="text-zinc-500 font-bold">Giá trị HĐ:</span>
+                  <span className="font-bold text-green-600">{formatVND(grandTotal)}</span>
+                </div>
+              </div>
+
               <div className="space-y-2">
-                <Label>Căn cứ Báo giá (*)</Label>
-                <Select onValueChange={(v) => setSelectedQuotationId(v || "")} value={selectedQuotationId}>
+                <Label>Trạng thái</Label>
+                <Select onValueChange={(v) => setStatus(v)} value={status}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Chọn Báo giá đã chốt...">
-                      {selectedQuotation ? `${selectedQuotation.code} - ${selectedQuotation.lead?.title}` : "Chọn Báo giá đã chốt..."}
-                    </SelectValue>
+                    <SelectValue placeholder="Chọn trạng thái" />
                   </SelectTrigger>
                   <SelectContent>
-                    {quotations.map(q => (
-                      <SelectItem key={q.id} value={q.id}>
-                        {q.code} - {q.lead?.title}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="DRAFT">Nháp</SelectItem>
+                    <SelectItem value="SIGNED">Đã Ký</SelectItem>
+                    <SelectItem value="COMPLETED">Hoàn Thành</SelectItem>
+                    <SelectItem value="CANCELLED">Đã Huỷ</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-
-              {selectedQuotation && (
-                <div className="p-3 bg-zinc-50 dark:bg-zinc-900 rounded-md border text-sm space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-zinc-500">Khách hàng:</span>
-                    <span className="font-medium">{selectedQuotation.lead?.customer?.name}</span>
-                  </div>
-                  <div className="flex justify-between border-t pt-2 mt-2">
-                    <span className="text-zinc-500 font-bold">Giá trị HĐ:</span>
-                    <span className="font-bold text-green-600">{formatVND(selectedQuotation.grandTotal)}</span>
-                  </div>
-                </div>
-              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -193,7 +173,7 @@ export default function NewContractPage() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-primary/5 border-primary/20">
             <CardHeader>
               <CardTitle className="text-primary flex items-center">

@@ -1,5 +1,6 @@
 import PDFDocument from 'pdfkit'
 import { NextResponse } from 'next/server'
+import path from 'path'
 
 const toRoman = (num: number): string => {
   const roman = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX"];
@@ -21,13 +22,19 @@ export async function generateContractPDF(contract: any, company: any): Promise<
       }))
     })
 
+    const fontRegular = path.join(process.cwd(), 'public', 'fonts', 'Roboto-Regular.ttf')
+    const fontBold = path.join(process.cwd(), 'public', 'fonts', 'Roboto-Bold.ttf')
+    
+    doc.registerFont('Roboto', fontRegular)
+    doc.registerFont('Roboto-Bold', fontBold)
+
     // Use default Helvetica instead of Windows Arial to ensure Vercel compatibility
     const setFont = (type: 'bold' | 'normal', size: number) => {
-      doc.font(type === 'bold' ? 'Helvetica-Bold' : 'Helvetica').fontSize(size)
+      doc.font(type === 'bold' ? 'Roboto-Bold' : 'Roboto').fontSize(size)
     }
 
-    const checkPageBreak = (neededH: number) => {
-      if (doc.y + neededH > 800) {
+    const checkPageBreak = (neededH: number, currentY: number = doc.y) => {
+      if (currentY + neededH > 750) {
         doc.addPage()
         return true
       }
@@ -112,7 +119,8 @@ export async function generateContractPDF(contract: any, company: any): Promise<
     }
 
     // Table Header
-    checkPageBreak(25)
+    checkPageBreak(25, y)
+    if (doc.y !== y && doc.y === 57) { y = doc.y } // Sync if page broke
     doc.rect(boxX, y, boxW, 25).fill('#E2EFDA').stroke()
     doc.fillColor('black')
     drawRowBorder(y, 25)
@@ -135,7 +143,7 @@ export async function generateContractPDF(contract: any, company: any): Promise<
       let sectionIndex = 1
       
       quotation.sections.forEach((section: any) => {
-        if(checkPageBreak(20)) { y = doc.y; drawRowBorder(y, 20); }
+        if(checkPageBreak(20, y)) { y = doc.y; drawRowBorder(y, 20); }
         
         // Section Header
         doc.rect(boxX, y, boxW, 20).fill('#F2F2F2').stroke()
@@ -163,7 +171,7 @@ export async function generateContractPDF(contract: any, company: any): Promise<
           const descH = doc.heightOfString(descText, { width: 140 })
           const rowH = Math.max(nameH, descH, 15) + 8
           
-          if (checkPageBreak(rowH)) { y = doc.y; }
+          if (checkPageBreak(rowH, y)) { y = doc.y; }
 
           drawRowBorder(y, rowH)
           
@@ -181,7 +189,7 @@ export async function generateContractPDF(contract: any, company: any): Promise<
       })
 
       // Totals row
-      if (checkPageBreak(20)) { y = doc.y; }
+      if (checkPageBreak(20, y)) { y = doc.y; }
       doc.rect(boxX, y, boxW, 20).stroke()
       doc.moveTo(boxX + 370, y).lineTo(boxX + 370, y + 20).stroke()
       
@@ -208,7 +216,9 @@ export async function generateContractPDF(contract: any, company: any): Promise<
         } else {
           setFont('normal', 10)
         }
-        doc.text(line, { align: 'justify' })
+        
+        checkPageBreak(15)
+        doc.text(line, boxX, doc.y, { width: boxW, align: 'justify' })
         doc.moveDown(0.2)
       })
     }
@@ -216,7 +226,7 @@ export async function generateContractPDF(contract: any, company: any): Promise<
     doc.moveDown(2)
 
     // --- SIGNATURES ---
-    checkPageBreak(100)
+    checkPageBreak(100, doc.y)
     const sigY = doc.y
     setFont('bold', 11)
     doc.text('ĐẠI DIỆN BÊN A', boxX, sigY, { width: 226, align: 'center' })

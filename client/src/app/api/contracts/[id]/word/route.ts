@@ -2,10 +2,12 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { generateContractWord } from '@/lib/utils/exportContractWord';
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const resolvedParams = await params;
+    const { id } = await params;
     const contract = await prisma.contract.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         lead: { include: { customer: true } },
         quotation: {

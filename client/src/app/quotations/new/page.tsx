@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,95 @@ type QSection = {
   id: string;
   name: string;
   items: QItem[];
+};
+
+const ProductSearchBox = ({ catalog, onSelectMultiple }: { catalog: CatalogItem[], onSelectMultiple: (ids: string[]) => void }) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [open]);
+
+  const filtered = catalog.filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.id.includes(search));
+
+  const handleAdd = () => {
+    onSelectMultiple(Array.from(selectedIds));
+    setSearch("");
+    setSelectedIds(new Set());
+    setOpen(false);
+  };
+
+  const toggleSelect = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  };
+
+  return (
+    <div className="relative flex-1" ref={containerRef}>
+      <Input 
+        placeholder="🔍 Tìm kiếm và chọn sản phẩm..."
+        value={search}
+        onChange={e => { setSearch(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        className="bg-white dark:bg-zinc-950"
+      />
+      {open && (
+        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-zinc-950 border rounded-md shadow-lg flex flex-col overflow-hidden" style={{ maxHeight: '300px' }}>
+          <div className="overflow-y-auto flex-1">
+            {filtered.length === 0 ? (
+              <div className="p-2 text-sm text-zinc-500 text-center py-4">Không tìm thấy thiết bị nào.</div>
+            ) : (
+              filtered.map(c => {
+                const isSelected = selectedIds.has(c.id);
+                return (
+                  <div 
+                    key={c.id} 
+                    className={`p-2 text-sm cursor-pointer border-b dark:border-zinc-800 last:border-0 transition-colors flex items-center gap-3 ${isSelected ? 'bg-primary/10' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}
+                    onClick={(e) => toggleSelect(c.id, e)}
+                  >
+                    <input 
+                      type="checkbox" 
+                      checked={isSelected}
+                      readOnly
+                      className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium text-zinc-900 dark:text-zinc-100">{c.name}</div>
+                      <div className="text-xs text-primary font-semibold mt-0.5">
+                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(c.sellingPrice)}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+          {selectedIds.size > 0 && (
+            <div className="p-2 border-t bg-zinc-50 dark:bg-zinc-900 flex justify-between items-center shrink-0">
+              <span className="text-sm font-medium text-primary">Đã chọn {selectedIds.size} vật tư</span>
+              <Button size="sm" onClick={handleAdd}>Thêm vào danh sách</Button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default function NewQuotationPage() {
@@ -100,23 +189,29 @@ export default function NewQuotationPage() {
     setSections(sections.filter(s => s.id !== id));
   };
 
-  const addItemToSection = (sectionId: string, catalogItemId: string) => {
-    const catalogItem = catalog.find(c => c.id === catalogItemId);
-    if (!catalogItem) return;
+  const addItemsToSection = (sectionId: string, catalogItemIds: string[]) => {
+    const itemsToAdd = catalogItemIds.map(id => catalog.find(c => c.id === id)).filter(Boolean) as CatalogItem[];
+    if (itemsToAdd.length === 0) return;
 
     setSections(sections.map(s => {
       if (s.id === sectionId) {
-        return {
-          ...s,
-          items: [...s.items, {
-            catalogItemId: catalogItem.id,
-            name: catalogItem.name,
-            unit: catalogItem.unit,
-            quantity: 1,
-            unitPrice: catalogItem.sellingPrice,
-            costPrice: catalogItem.costPrice
-          }]
-        };
+        const updatedItems = [...s.items];
+        itemsToAdd.forEach(c => {
+          const existingIdx = updatedItems.findIndex(i => i.catalogItemId === c.id);
+          if (existingIdx >= 0) {
+            updatedItems[existingIdx].quantity += 1;
+          } else {
+            updatedItems.push({
+              catalogItemId: c.id,
+              name: c.name,
+              unit: c.unit,
+              quantity: 1,
+              unitPrice: c.sellingPrice,
+              costPrice: c.costPrice
+            });
+          }
+        });
+        return { ...s, items: updatedItems };
       }
       return s;
     }));
@@ -229,7 +324,7 @@ export default function NewQuotationPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
-          <Card>
+          <Card className="overflow-visible">
             <CardHeader>
               <CardTitle>Chi tiết Hạng mục</CardTitle>
             </CardHeader>
@@ -305,16 +400,8 @@ export default function NewQuotationPage() {
                   </div>
 
                   <div className="mt-4 flex gap-2">
-                    <Select key={`select-${section.id}-${section.items.length}`} onValueChange={(val) => addItemToSection(section.id, val as string)}>
-                      <SelectTrigger className="flex-1 bg-white dark:bg-zinc-950">
-                        <SelectValue placeholder="Lựa chọn Mặt hàng / Sản Phẩm" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {catalog.map(c => (
-                          <SelectItem key={c.id} value={c.id}>{c.name} - {formatVND(c.sellingPrice)}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <ProductSearchBox catalog={catalog} onSelectMultiple={(vals) => addItemsToSection(section.id, vals)} />
+
                     <Button variant="outline" onClick={() => addCustomItemToSection(section.id)}>
                       + Dòng tuỳ chỉnh
                     </Button>

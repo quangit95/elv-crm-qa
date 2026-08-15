@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const resolvedParams = await params;
     await prisma.quotation.update({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       data: { isActive: true }
     });
     return NextResponse.json({ success: true });

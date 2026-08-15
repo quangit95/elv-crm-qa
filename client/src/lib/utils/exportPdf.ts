@@ -1,5 +1,7 @@
 import PDFDocument from 'pdfkit'
 import { NextResponse } from 'next/server'
+import path from 'path'
+import fs from 'fs'
 
 const toRoman = (num: number): string => {
   const roman = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX"];
@@ -22,8 +24,14 @@ export async function generateQuotationPDF(quotation: any, company: any): Promis
       }))
     })
 
+    const fontRegular = path.join(process.cwd(), 'public', 'fonts', 'Roboto-Regular.ttf')
+    const fontBold = path.join(process.cwd(), 'public', 'fonts', 'Roboto-Bold.ttf')
+    
+    doc.registerFont('Roboto', fontRegular)
+    doc.registerFont('Roboto-Bold', fontBold)
+
     const setFont = (type: 'bold' | 'normal', size: number) => {
-      doc.font(type === 'bold' ? 'Helvetica-Bold' : 'Helvetica').fontSize(size)
+      doc.font(type === 'bold' ? 'Roboto-Bold' : 'Roboto').fontSize(size)
     }
 
     // HEADER
@@ -115,7 +123,7 @@ export async function generateQuotationPDF(quotation: any, company: any): Promis
     y += 20
 
     const checkPageBreak = (neededH: number) => {
-      if (y + neededH > 800) {
+      if (y + neededH > 770) {
         doc.addPage()
         y = 30
         // Redraw Header
@@ -140,12 +148,16 @@ export async function generateQuotationPDF(quotation: any, company: any): Promis
       checkPageBreak(20)
       
       // Section Header
-      doc.rect(boxX, y, boxW, 20).fill('#D9E1F2').stroke()
+      doc.rect(boxX, y, boxW, 20).fill('#D9E1F2')
       doc.fillColor('black')
       
-      // Section border only outer and the last total col
+      // Draw the outer border of the section header row
+      doc.rect(boxX, y, boxW, 20).stroke()
+      
+      // Only draw lines for the Roman numeral column and the Total amount column
       doc.moveTo(45, y).lineTo(45, y + 20).stroke()
       doc.moveTo(485, y).lineTo(485, y + 20).stroke()
+
       
       setFont('bold', 9)
       doc.text(toRoman(sectionIndex++), 30, y + 6, { width: 15, align: 'center' })
@@ -162,10 +174,23 @@ export async function generateQuotationPDF(quotation: any, company: any): Promis
       section.items.forEach((item: any) => {
         setFont('normal', 8)
         
+        let imgPath = null;
+        let imgHeight = 0;
+        if (item.catalogItem?.image && item.catalogItem.image.startsWith('/uploads')) {
+          imgPath = path.join(process.cwd(), 'public', item.catalogItem.image);
+          if (fs.existsSync(imgPath)) {
+            imgHeight = 60;
+          } else {
+            imgPath = null;
+          }
+        }
+
         const nameH = doc.heightOfString(item.name, { width: 100 })
         const descText = item.catalogItem?.description || ''
         const descH = doc.heightOfString(descText, { width: 195 })
-        const rowH = Math.max(nameH, descH, 15) + 8 // Padding
+        
+        const nameColH = nameH + (imgPath ? imgHeight + 4 : 0);
+        const rowH = Math.max(nameColH, descH, 15) + 8 // Padding
         
         checkPageBreak(rowH)
 
@@ -173,6 +198,11 @@ export async function generateQuotationPDF(quotation: any, company: any): Promis
         
         doc.text((itemStt++).toString(), 30, y + 4, { width: 15, align: 'center' })
         doc.text(item.name, 48, y + 4, { width: 100 })
+        
+        if (imgPath) {
+           doc.image(imgPath, 48, y + 4 + nameH + 2, { fit: [90, imgHeight], align: 'center' })
+        }
+
         doc.text(descText, 153, y + 4, { width: 195 })
         
         doc.text(item.unit || 'Cái', 350, y + 4, { width: 30, align: 'center' })
@@ -188,6 +218,7 @@ export async function generateQuotationPDF(quotation: any, company: any): Promis
     const drawTotalRow = (label: string, value: string, bold: boolean) => {
       checkPageBreak(20)
       doc.rect(boxX, y, boxW, 20).stroke()
+      // Only draw the vertical line separating the label from the total amount
       doc.moveTo(485, y).lineTo(485, y + 20).stroke()
       
       setFont(bold ? 'bold' : 'normal', 9)
