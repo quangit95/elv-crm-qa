@@ -123,7 +123,7 @@ export default function DeliveryNotePage() {
             {allItems.map((item, idx) => (
               <tr key={idx}>
                 <td className="border border-black p-2 text-center">{idx + 1}</td>
-                <td className="border border-black p-2">{item.catalogItem?.model || item.name?.split(' ')[0] || ""}</td>
+                <td className="border border-black p-2">{item.catalogItem?.model || ""}</td>
                 <td className="border border-black p-2">{item.name}</td>
                 <td className="border border-black p-2 text-center">{item.catalogItem?.unit || "Cái"}</td>
                 <td className="border border-black p-2 text-right">{formatVND(item.quantity)}</td>
