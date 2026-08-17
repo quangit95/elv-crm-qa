@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, FileText, FileSpreadsheet, Share2, CheckCircle, XCircle, RotateCcw } from "lucide-react";
+import { Plus, Pencil, Trash2, FileText, FileSpreadsheet, Share2, CheckCircle, XCircle, RotateCcw, Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 
@@ -193,6 +193,9 @@ export default function QuotationsPage() {
                       <a href={`/api/quotations/${qt.id}/excel`} target="_blank" rel="noreferrer" title="Tải Excel">
                         <Button variant="ghost" size="icon"><FileSpreadsheet className="h-4 w-4 text-green-600" /></Button>
                       </a>
+                      <Link href={`/quotations/${qt.id}/delivery-note`} target="_blank">
+                        <Button variant="ghost" size="icon" title="In phiếu xuất kho bán hàng"><Package className="h-4 w-4 text-orange-600" /></Button>
+                      </Link>
                       <Button variant="ghost" size="icon" title="Chia sẻ" onClick={() => handleShare(qt)}>
                         <Share2 className="h-4 w-4 text-blue-600" />
                       </Button>

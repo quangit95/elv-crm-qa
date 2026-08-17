@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Trash2, Save, FileText } from "lucide-react";
+import { Plus, Trash2, FileText, Save, Check, X, Pencil, Package } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 
@@ -328,6 +328,12 @@ export default function EditQuotationPage() {
             <FileText className="mr-2 h-4 w-4" />
             Cập nhật & Xem Nhanh
           </Button>
+          <a href={`/quotations/${quotationId}/delivery-note`} target="_blank" rel="noreferrer">
+            <Button variant="outline" size="lg" className="border-orange-500 text-orange-600 hover:bg-orange-50">
+              <Package className="mr-2 h-4 w-4" />
+              In Phiếu Xuất Kho
+            </Button>
+          </a>
           <Button onClick={() => saveQuotation(false)} size="lg">
             <Save className="mr-2 h-4 w-4" />
             Cập nhật Báo Giá
