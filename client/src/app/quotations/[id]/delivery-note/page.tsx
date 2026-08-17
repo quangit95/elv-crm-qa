@@ -67,6 +67,10 @@ export default function DeliveryNotePage() {
   return (
     <div className="bg-white text-black print:bg-white min-h-screen">
       <style dangerouslySetInnerHTML={{__html: `
+        @page {
+          size: A4;
+          margin: 0; /* Hides the default browser header/footer */
+        }
         @media print {
           body * {
             visibility: hidden;
@@ -80,7 +84,7 @@ export default function DeliveryNotePage() {
             top: 0;
             width: 100%;
             margin: 0;
-            padding: 0;
+            padding: 2cm; /* Add padding here so it doesn't stick to paper edge */
           }
         }
       `}} />
