@@ -15,6 +15,7 @@ export function CompanyForm() {
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
+    email: "",
     address: "",
     taxCode: "",
     logo: "",
@@ -33,6 +34,7 @@ export function CompanyForm() {
         setFormData({
           name: data.name || "",
           phone: data.phone || "",
+          email: data.email || "",
           address: data.address || "",
           taxCode: data.taxCode || "",
           logo: data.logo || "",
@@ -172,6 +174,15 @@ export function CompanyForm() {
             <Input 
               id="phone" name="phone" 
               value={formData.phone} onChange={handleChange} 
+              className="bg-zinc-950 border-zinc-800 text-white" 
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-zinc-300">Email</Label>
+            <Input 
+              id="email" name="email" type="email"
+              value={formData.email} onChange={handleChange} 
               className="bg-zinc-950 border-zinc-800 text-white" 
             />
           </div>

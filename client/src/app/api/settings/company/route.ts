@@ -20,16 +20,16 @@ export async function GET() {
 
 export async function PUT(req: Request) {
   try {
-    const { name, phone, address, taxCode, logo } = await req.json();
+    const { name, phone, email, address, taxCode, logo } = await req.json();
     let company = await prisma.company.findFirst();
     if (company) {
       company = await prisma.company.update({
         where: { id: company.id },
-        data: { name, phone, address, taxCode, logo }
+        data: { name, phone, email, address, taxCode, logo }
       });
     } else {
       company = await prisma.company.create({
-        data: { name, phone, address, taxCode, logo }
+        data: { name, phone, email, address, taxCode, logo }
       });
     }
     return NextResponse.json(company);
