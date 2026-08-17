@@ -9,7 +9,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       include: {
         lead: { include: { customer: true } },
         sections: {
-          include: { items: true },
+          include: { items: { include: { catalogItem: true } } },
           orderBy: { order: 'asc' }
         }
       }
