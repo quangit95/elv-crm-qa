@@ -116,7 +116,7 @@ async function main() {
 
   for (const item of catalog) {
     await prisma.catalogItem.create({
-      data: item
+      data: item as any
     })
   }
 

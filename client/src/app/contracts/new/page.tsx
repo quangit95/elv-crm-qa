@@ -204,7 +204,7 @@ export default function NewContractPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Tỷ lệ thanh toán theo đợt</Label>
-                <Select onValueChange={(v) => setPaymentSplit(v)} value={paymentSplit}>
+                <Select onValueChange={(v) => setPaymentSplit(v || "")} value={paymentSplit || undefined}>
                   <SelectTrigger className="bg-white dark:bg-zinc-950">
                     <SelectValue placeholder="Chọn chia đợt thanh toán" />
                   </SelectTrigger>

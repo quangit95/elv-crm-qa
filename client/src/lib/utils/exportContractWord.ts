@@ -143,7 +143,7 @@ export async function generateContractWord(contract: any, company: any) {
 
   const buffer = await Packer.toBuffer(doc);
   
-  return new Response(buffer, {
+  return new Response(buffer as any, {
     headers: {
       'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'Content-Disposition': `attachment; filename=Contract-${contract.code}.docx`
@@ -156,7 +156,7 @@ function createTermsParagraphs(terms: string): Paragraph[] {
   return lines.map(line => {
     const isHeader = line.trim().startsWith('Điều') || line.trim().match(/^[0-9]\./);
     return new Paragraph({
-      children: [new TextRun({ text: line, bold: isHeader, size: isHeader ? 24 : 22 })],
+      children: [new TextRun({ text: line, bold: !!isHeader, size: isHeader ? 24 : 22 })],
       alignment: AlignmentType.JUSTIFIED,
     });
   });

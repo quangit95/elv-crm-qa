@@ -148,7 +148,7 @@ export default function EditContractPage() {
 
               <div className="space-y-2">
                 <Label>Trạng thái</Label>
-                <Select onValueChange={(v) => setStatus(v)} value={status}>
+                <Select onValueChange={(v) => setStatus(v || "")} value={status || undefined}>
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn trạng thái" />
                   </SelectTrigger>
@@ -184,7 +184,7 @@ export default function EditContractPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Tỷ lệ thanh toán theo đợt</Label>
-                <Select onValueChange={(v) => setPaymentSplit(v)} value={paymentSplit}>
+                <Select onValueChange={(v) => setPaymentSplit(v || "")} value={paymentSplit || undefined}>
                   <SelectTrigger className="bg-white dark:bg-zinc-950">
                     <SelectValue placeholder="Chọn chia đợt thanh toán" />
                   </SelectTrigger>
