@@ -66,6 +66,25 @@ export default function DeliveryNotePage() {
 
   return (
     <div className="bg-white text-black print:bg-white min-h-screen">
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #delivery-note-print-area, #delivery-note-print-area * {
+            visibility: visible;
+          }
+          #delivery-note-print-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+          }
+        }
+      `}} />
+
       {/* Hide this print button when printing */}
       <div className="print:hidden p-4 bg-zinc-100 flex justify-center mb-4">
         <button 
@@ -76,7 +95,7 @@ export default function DeliveryNotePage() {
         </button>
       </div>
 
-      <div className="max-w-[800px] mx-auto p-8 text-[15px] leading-relaxed" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
+      <div id="delivery-note-print-area" className="max-w-[800px] mx-auto p-8 text-[15px] leading-relaxed bg-white" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
         {/* Header */}
         <div className="mb-8">
           <div className="font-bold text-lg uppercase">{company?.name || "CÔNG TY TNHH GIẢI PHÁP CÔNG NGHỆ VIỄN ĐÔNG"}</div>
