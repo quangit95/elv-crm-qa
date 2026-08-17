@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-
+import { prisma } from "@/lib/prisma";
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
@@ -29,12 +29,20 @@ export async function POST(req: NextRequest) {
       },
     };
 
+    const categories = await prisma.category.findMany();
+    const brands = await prisma.brand.findMany();
+    
+    const categoryList = categories.map((c: any) => `"${c.id}": "${c.name}"`).join(", ");
+    const brandList = brands.map((b: any) => `"${b.id}": "${b.name}"`).join(", ");
+
     const prompt = `
 Bạn là một trợ lý thông minh giúp bóc tách dữ liệu từ phiếu xuất kho, phiếu mua hàng, hoá đơn mua vật tư.
 Hãy phân tích hình ảnh này và trả về danh sách các sản phẩm/thiết bị có trong phiếu.
 Yêu cầu:
 - Bóc tách 'name' (Tên thiết bị/vật tư). BẮT BUỘC giữ lại toàn bộ chuỗi tên bao gồm cả mã model bên trong (Ví dụ: "Camera IP 4MP DS-2CD2043G2-I").
 - Bóc tách 'model' (Mã sản phẩm/Model). Trích xuất riêng phần mã model từ tên ra. Nếu không thấy rõ mã, hãy trả về chuỗi rỗng "".
+- Bóc tách 'categoryId' (ID Danh mục). Dựa vào tên sản phẩm, tìm danh mục phù hợp nhất trong danh sách sau (định dạng ID: Tên): {${categoryList}}. BẮT BUỘC trả về ID (chuỗi string) của danh mục khớp nhất. Nếu không có danh mục nào phù hợp, trả về chuỗi rỗng "".
+- Bóc tách 'brandId' (ID Thương hiệu). Dựa vào tên sản phẩm hoặc logo, tìm thương hiệu phù hợp trong danh sách sau (định dạng ID: Tên): {${brandList}}. BẮT BUỘC trả về ID (chuỗi string) của thương hiệu khớp nhất. Nếu không tìm thấy, trả về chuỗi rỗng "".
 - Bóc tách chính xác 'costPrice' (Giá nhập/Đơn giá - viết dưới dạng số nguyên, ví dụ: 15000). Nếu không tìm thấy, để là 0.
 - Bóc tách 'unit' (Đơn vị tính - ví dụ: Cái, Cuộn, Mét, Bộ). Nếu không thấy, tự suy luận dựa vào tên (mặc định là 'Cái').
 - Bóc tách 'quantity' (Số lượng - số nguyên). Nếu không có, mặc định là 1.
@@ -44,6 +52,8 @@ Ví dụ trả về:
   {
     "name": "Camera IP 4MP DS-2CD2043G2-I",
     "model": "DS-2CD2043G2-I",
+    "categoryId": "id-cua-danh-muc-camera",
+    "brandId": "id-cua-thuong-hieu-hikvision",
     "costPrice": 1250000,
     "unit": "Cái",
     "quantity": 2

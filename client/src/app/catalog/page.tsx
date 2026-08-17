@@ -80,7 +80,8 @@ export default function CatalogPage() {
           costPrice: item.costPrice || 0,
           sellingPrice: item.costPrice ? Math.round((item.costPrice * 1.3) / 1000) * 1000 : 0,
           unit: item.unit || "Cái",
-          categoryId: "",
+          categoryId: item.categoryId || "",
+          brandId: item.brandId || "",
         }));
         setAiExtractedItems(items);
       } else {
@@ -106,7 +107,7 @@ export default function CatalogPage() {
         unit: item.unit || "Cái",
         categoryId: item.categoryId || null,
         warranty: 12,
-        brandId: null,
+        brandId: item.brandId || null,
         supplierId: null,
         model: item.model || "",
         description: "",
@@ -341,6 +342,7 @@ export default function CatalogPage() {
                             <TableHead>ĐVT</TableHead>
                             <TableHead className="text-right">Giá nhập</TableHead>
                             <TableHead className="text-right">Giá bán</TableHead>
+                            <TableHead>Thương hiệu</TableHead>
                             <TableHead>Danh mục</TableHead>
                             <TableHead></TableHead>
                           </TableRow>
@@ -384,6 +386,16 @@ export default function CatalogPage() {
                                   newItems[idx].sellingPrice = Number(e.target.value);
                                   setAiExtractedItems(newItems);
                                 }} />
+                              </TableCell>
+                              <TableCell className="p-2">
+                                <select className="flex h-8 w-[120px] rounded-md border border-input bg-background px-3 py-1 text-xs" value={item.brandId} onChange={e => {
+                                  const newItems = [...aiExtractedItems];
+                                  newItems[idx].brandId = e.target.value;
+                                  setAiExtractedItems(newItems);
+                                }}>
+                                  <option value="">-- Thương hiệu --</option>
+                                  {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                                </select>
                               </TableCell>
                               <TableCell className="p-2">
                                 <select className="flex h-8 w-[120px] rounded-md border border-input bg-background px-3 py-1 text-xs" value={item.categoryId} onChange={e => {
