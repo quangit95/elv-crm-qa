@@ -93,11 +93,7 @@ export default function DeliveryNotePage() {
       <div className="print:hidden p-4 bg-zinc-100 flex flex-col items-center justify-center mb-4 gap-2">
         <button 
           onClick={() => {
-            try {
-              setTimeout(() => window.print(), 100);
-            } catch (e) {
-              alert("Trình duyệt không hỗ trợ in trực tiếp. Vui lòng mở bằng Safari/Chrome.");
-            }
+            window.print();
           }}
           className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 font-medium"
         >
