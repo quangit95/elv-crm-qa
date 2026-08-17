@@ -413,12 +413,11 @@ export default function EditQuotationPage() {
                         </div>
                       </div>
                     ))}
-                        </div>
-                      </div>
                     </div>
                   </div>
+                </div>
 
-                  <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-4 flex flex-wrap gap-2">
                     <ProductSearchBox catalog={catalog} onSelectMultiple={(vals) => addItemsToSection(section.id, vals)} />
 
                     <Button variant="outline" onClick={() => addCustomItemToSection(section.id)}>
