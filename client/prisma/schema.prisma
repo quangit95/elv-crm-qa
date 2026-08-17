@@ -15,6 +15,7 @@ model Company {
   address   String?
   taxCode   String?
   logo      String?
+  isActive  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

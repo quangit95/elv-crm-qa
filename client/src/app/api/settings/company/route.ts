@@ -3,11 +3,17 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
-    let company = await prisma.company.findFirst();
+    let company = await prisma.company.findFirst({
+      where: { isActive: true }
+    });
+    if (!company) {
+      company = await prisma.company.findFirst();
+    }
     if (!company) {
       company = await prisma.company.create({
         data: {
           name: 'Công ty của bạn',
+          isActive: true
         }
       });
     }
