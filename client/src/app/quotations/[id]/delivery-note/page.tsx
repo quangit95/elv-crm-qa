@@ -84,7 +84,7 @@ export default function DeliveryNotePage() {
             top: 0;
             width: 100%;
             margin: 0;
-            padding: 2cm; /* Add padding here so it doesn't stick to paper edge */
+            padding: 1cm; /* Reduced padding for wider table */
           }
         }
       `}} />
@@ -99,7 +99,7 @@ export default function DeliveryNotePage() {
         </button>
       </div>
 
-      <div id="delivery-note-print-area" className="max-w-[800px] mx-auto p-8 text-[15px] leading-relaxed bg-white" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
+      <div id="delivery-note-print-area" className="max-w-[800px] print:max-w-none mx-auto p-8 text-[15px] leading-relaxed bg-white" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
         {/* Header */}
         <div className="mb-8">
           <div className="font-bold text-lg uppercase">{company?.name || "CÔNG TY TNHH GIẢI PHÁP CÔNG NGHỆ VIỄN ĐÔNG"}</div>
@@ -133,13 +133,13 @@ export default function DeliveryNotePage() {
         <table className="w-full border-collapse border border-black text-sm mb-4">
           <thead>
             <tr className="font-bold">
-              <th className="border border-black p-2 text-center w-12">STT</th>
-              <th className="border border-black p-2 text-center w-32">Mã hàng</th>
+              <th className="border border-black p-2 text-center w-10">STT</th>
+              <th className="border border-black p-2 text-center w-24">Mã hàng</th>
               <th className="border border-black p-2 text-center">Tên hàng</th>
-              <th className="border border-black p-2 text-center w-20">Đơn vị</th>
-              <th className="border border-black p-2 text-center w-20">Số lượng</th>
-              <th className="border border-black p-2 text-center w-28">Đơn giá</th>
-              <th className="border border-black p-2 text-center w-32">Thành tiền</th>
+              <th className="border border-black p-2 text-center w-16">Đơn vị</th>
+              <th className="border border-black p-2 text-center w-16">Số lượng</th>
+              <th className="border border-black p-2 text-center w-24">Đơn giá</th>
+              <th className="border border-black p-2 text-center w-28">Thành tiền</th>
             </tr>
           </thead>
           <tbody>
