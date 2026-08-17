@@ -305,12 +305,12 @@ export default function NewQuotationPage() {
 
   return (
     <div className="space-y-6 pb-20">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Tạo Báo Giá Mới</h1>
           <p className="text-zinc-500">Trình tạo báo giá tương tác đa hạng mục.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => saveQuotation(true)} size="lg" className="border-primary text-primary hover:bg-primary/5">
             <FileText className="mr-2 h-4 w-4" />
             Lưu & Xem Nhanh
@@ -345,16 +345,18 @@ export default function NewQuotationPage() {
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                  <div className="grid grid-cols-12 gap-2 text-sm font-semibold text-zinc-500 mb-2 px-2">
-                    <div className="col-span-4">Mặt hàng / Thiết bị</div>
-                    <div className="col-span-2 text-center">Đơn vị tính</div>
-                    <div className="col-span-1 text-center">Số lượng</div>
-                    <div className="col-span-2 text-right">Đơn giá (VNĐ)</div>
-                    <div className="col-span-2 text-right">Thành tiền (VNĐ)</div>
-                    <div className="col-span-1"></div>
-                  </div>
-                  
-                  <div className="space-y-2">
+                  <div className="overflow-x-auto">
+                    <div className="min-w-[800px]">
+                      <div className="grid grid-cols-12 gap-2 text-sm font-semibold text-zinc-500 mb-2 px-2">
+                        <div className="col-span-4">Mặt hàng / Thiết bị</div>
+                        <div className="col-span-2 text-center">Đơn vị tính</div>
+                        <div className="col-span-1 text-center">Số lượng</div>
+                        <div className="col-span-2 text-right">Đơn giá (VNĐ)</div>
+                        <div className="col-span-2 text-right">Thành tiền (VNĐ)</div>
+                        <div className="col-span-1"></div>
+                      </div>
+                      
+                      <div className="space-y-2">
                     {section.items.map((item, iIdx) => (
                       <div key={iIdx} className="grid grid-cols-12 gap-2 items-center bg-white dark:bg-zinc-950 p-2 rounded border">
                         <div className="col-span-4 font-medium text-sm">
@@ -397,9 +399,12 @@ export default function NewQuotationPage() {
                         </div>
                       </div>
                     ))}
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="mt-4 flex gap-2">
+                  <div className="mt-4 flex flex-wrap gap-2">
                     <ProductSearchBox catalog={catalog} onSelectMultiple={(vals) => addItemsToSection(section.id, vals)} />
 
                     <Button variant="outline" onClick={() => addCustomItemToSection(section.id)}>
