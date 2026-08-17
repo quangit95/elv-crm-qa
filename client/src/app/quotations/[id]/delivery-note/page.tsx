@@ -76,7 +76,7 @@ export default function DeliveryNotePage() {
         </button>
       </div>
 
-      <div className="max-w-[800px] mx-auto p-8 font-serif text-[15px] leading-relaxed">
+      <div className="max-w-[800px] mx-auto p-8 text-[15px] leading-relaxed" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
         {/* Header */}
         <div className="mb-8">
           <div className="font-bold text-lg uppercase">{company?.name || "CÔNG TY TNHH GIẢI PHÁP CÔNG NGHỆ VIỄN ĐÔNG"}</div>
