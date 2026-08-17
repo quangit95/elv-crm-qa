@@ -4,10 +4,10 @@ import { prisma } from '@/lib/prisma';
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const resolvedParams = await params;
-    const { name, phone, email, address, taxCode, logo } = await req.json();
+    const { name, phone, email, address, taxCode, logo, representative } = await req.json();
     const company = await prisma.company.update({
       where: { id: resolvedParams.id },
-      data: { name, phone, email, address, taxCode, logo }
+      data: { name, phone, email, address, taxCode, logo, representative }
     });
     return NextResponse.json(company);
   } catch (error) {

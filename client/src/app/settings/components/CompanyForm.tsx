@@ -15,6 +15,7 @@ type Company = {
   address: string;
   taxCode: string;
   logo: string;
+  representative: string;
   isActive: boolean;
 };
 
@@ -37,6 +38,7 @@ export function CompanyForm() {
     address: "",
     taxCode: "",
     logo: "",
+    representative: "",
   };
   const [formData, setFormData] = useState(defaultFormData);
 
@@ -68,6 +70,7 @@ export function CompanyForm() {
         address: company.address || "",
         taxCode: company.taxCode || "",
         logo: company.logo || "",
+        representative: company.representative || "",
       });
     } else {
       setEditingId(null);
@@ -296,6 +299,11 @@ export function CompanyForm() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="representative" className="text-zinc-300">Người đại diện</Label>
+                <Input id="representative" name="representative" value={formData.representative} onChange={handleChange} className="bg-zinc-950 border-zinc-800 text-white" />
+              </div>
+
+              <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="logo" className="text-zinc-300">URL Logo (Link ảnh)</Label>
                 <Input id="logo" name="logo" value={formData.logo} onChange={handleChange} className="bg-zinc-950 border-zinc-800 text-white" placeholder="https://example.com/logo.png" />
               </div>

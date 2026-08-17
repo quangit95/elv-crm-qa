@@ -12,9 +12,10 @@ model Company {
   name      String
   phone     String?
   email     String?
-  address   String?
-  taxCode   String?
-  logo      String?
+  address        String?
+  taxCode        String?
+  logo           String?
+  representative String?
   isActive  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

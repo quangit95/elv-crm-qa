@@ -209,7 +209,7 @@ export default function DeliveryNotePage() {
             <div className="italic mb-1">Ngày ..... tháng ..... năm ........</div>
             <div className="font-bold">Giám đốc</div>
             <div className="italic mb-24">(Ký, họ tên, đóng dấu)</div>
-            <div className="font-bold">Huỳnh Thị Ngọc Ngà</div>
+            <div className="font-bold">{company?.representative || ""}</div>
           </div>
         </div>
 
