@@ -90,13 +90,22 @@ export default function DeliveryNotePage() {
       `}} />
 
       {/* Hide this print button when printing */}
-      <div className="print:hidden p-4 bg-zinc-100 flex justify-center mb-4">
+      <div className="print:hidden p-4 bg-zinc-100 flex flex-col items-center justify-center mb-4 gap-2">
         <button 
-          onClick={() => window.print()}
+          onClick={() => {
+            try {
+              setTimeout(() => window.print(), 100);
+            } catch (e) {
+              alert("Trình duyệt không hỗ trợ in trực tiếp. Vui lòng mở bằng Safari/Chrome.");
+            }
+          }}
           className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 font-medium"
         >
           In Phiếu Xuất Kho
         </button>
+        <p className="text-xs text-zinc-500 text-center max-w-sm px-4">
+          Nếu nút In không hoạt động (khi mở từ Zalo/Facebook), vui lòng bấm dấu <b>...</b> ở góc phải màn hình và chọn <b>Mở bằng trình duyệt (Safari/Chrome)</b>.
+        </p>
       </div>
 
       <div id="delivery-note-print-area" className="max-w-[800px] print:max-w-none mx-auto p-8 text-[15px] leading-relaxed bg-white" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
