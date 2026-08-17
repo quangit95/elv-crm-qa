@@ -149,7 +149,7 @@ export default function ProjectsPage() {
             </div>
             <div className="space-y-2">
               <Label>Khách hàng</Label>
-              <Select value={formData.customerId} onValueChange={v => setFormData({...formData, customerId: v})}>
+              <Select value={formData.customerId || undefined} onValueChange={v => setFormData({...formData, customerId: v || ""})}>
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn khách hàng" />
                 </SelectTrigger>
