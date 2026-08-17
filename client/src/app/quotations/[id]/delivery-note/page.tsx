@@ -192,8 +192,25 @@ export default function DeliveryNotePage() {
           Số tiền bằng chữ: {numberToVietnameseWords(grandTotal)}
         </div>
         
-        <div className="mb-20">
+        <div className="mb-4">
           <div>Chưa thanh toán (ký xác nhận KH):</div>
+        </div>
+
+        <div className="flex justify-between text-center mt-8 pb-12">
+          <div className="w-1/3">
+            <div className="font-bold">Người mua hàng</div>
+            <div className="italic">(Ký, họ tên)</div>
+          </div>
+          <div className="w-1/3">
+            <div className="font-bold">Kế toán trưởng</div>
+            <div className="italic">(Ký, họ tên)</div>
+          </div>
+          <div className="w-1/3 flex flex-col items-center">
+            <div className="italic mb-1">Ngày ..... tháng ..... năm ........</div>
+            <div className="font-bold">Giám đốc</div>
+            <div className="italic mb-24">(Ký, họ tên, đóng dấu)</div>
+            <div className="font-bold">Huỳnh Thị Ngọc Ngà</div>
+          </div>
         </div>
 
       </div>
