@@ -131,39 +131,40 @@ export default function QuotationsPage() {
               <TableHead>Ngày Tạo</TableHead>
               <TableHead className="text-right">Tổng Tiền</TableHead>
               <TableHead>Trạng Thái</TableHead>
+              <TableHead className="text-right hidden md:table-cell">Thao tác</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-10 text-zinc-500">
+                <TableCell colSpan={5} className="text-center py-10 text-zinc-500">
                   Đang tải dữ liệu...
                 </TableCell>
               </TableRow>
             ) : filteredQuotations.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-10 text-zinc-500">
+                <TableCell colSpan={5} className="text-center py-10 text-zinc-500">
                   Chưa có báo giá nào.
                 </TableCell>
               </TableRow>
             ) : (
               filteredQuotations.map((qt) => (
                 <React.Fragment key={qt.id}>
-                  <TableRow className="border-b-0">
-                    <TableCell className="pb-1">
+                  <TableRow className="border-b-0 hover:bg-zinc-50/50">
+                    <TableCell className="py-2 align-top md:align-middle">
                       <div className="mb-1">
                         <a href={`/api/quotations/${qt.id}/pdf`} target="_blank" rel="noreferrer" className="text-primary hover:underline font-bold text-base" title="Xem nhanh báo giá">
                           {qt.code}
                         </a>
                       </div>
                       <p className="font-medium text-sm">{qt.lead?.title}</p>
-                      <p className="text-xs text-zinc-500">{qt.lead?.customer?.name}</p>
+                      <p className="text-xs text-zinc-500 mb-2 md:mb-0">{qt.lead?.customer?.name}</p>
                     </TableCell>
-                    <TableCell className="pb-1">{new Date(qt.createdAt).toLocaleDateString("vi-VN")}</TableCell>
-                    <TableCell className="text-right font-bold text-primary pb-1">
+                    <TableCell className="pt-2.5 align-top md:pt-2 md:align-middle">{new Date(qt.createdAt).toLocaleDateString("vi-VN")}</TableCell>
+                    <TableCell className="text-right font-bold text-primary pt-2.5 align-top md:pt-2 md:align-middle">
                       {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(qt.grandTotal)}
                     </TableCell>
-                    <TableCell className="pb-1">
+                    <TableCell className="pt-2.5 align-top md:pt-2 md:align-middle">
                       <Badge variant={
                         qt.status === 'ACCEPTED' ? 'default' : 
                         qt.status === 'REJECTED' ? 'destructive' : 
@@ -172,10 +173,8 @@ export default function QuotationsPage() {
                         {qt.status === 'ACCEPTED' ? 'ĐÃ CHỐT' : qt.status === 'REJECTED' ? 'ĐÃ HUỶ' : 'NHÁP'}
                       </Badge>
                     </TableCell>
-                  </TableRow>
-                  <TableRow className="bg-zinc-50/30 hover:bg-zinc-50/30">
-                    <TableCell colSpan={4} className="pt-2 pb-4">
-                      <div className="flex items-center gap-2 flex-wrap">
+                    <TableCell className="hidden md:table-cell text-right align-middle">
+                      <div className="flex items-center gap-2 justify-end">
                         <a href={`/api/quotations/${qt.id}/pdf`} target="_blank" rel="noreferrer" title="Tải PDF">
                           <Button variant="ghost" size="icon" className="h-8 w-8 bg-zinc-100 hover:bg-zinc-200"><FileText className="h-4 w-4 text-red-500" /></Button>
                         </a>
@@ -185,12 +184,6 @@ export default function QuotationsPage() {
                         <Link href={`/quotations/${qt.id}/delivery-note`} target="_blank">
                           <Button variant="ghost" size="icon" className="h-8 w-8 bg-zinc-100 hover:bg-zinc-200" title="In phiếu xuất kho bán hàng"><Package className="h-4 w-4 text-orange-600" /></Button>
                         </Link>
-                        {/* Tạm ẩn nút chia sẻ theo yêu cầu
-                        <Button variant="ghost" size="icon" className="h-8 w-8 bg-zinc-100 hover:bg-zinc-200" title="Chia sẻ" onClick={() => handleShare(qt)}>
-                          <Share2 className="h-4 w-4 text-blue-600" />
-                        </Button>
-                        <div className="w-px h-4 bg-zinc-200 mx-1"></div>
-                        */}
                         <Link href={`/quotations/${qt.id}/edit`}>
                           <Button variant="ghost" size="icon" className="h-8 w-8 bg-zinc-100 hover:bg-zinc-200" title="Chỉnh sửa">
                             <Pencil className="h-4 w-4 text-blue-500" />
@@ -207,7 +200,49 @@ export default function QuotationsPage() {
                             </Button>
                           </>
                         )}
-                        
+                        <div className="w-px h-4 bg-zinc-200 mx-1"></div>
+                        {archiveTab === 'active' ? (
+                          <Button variant="ghost" size="icon" className="h-8 w-8 bg-zinc-100 hover:bg-zinc-200" title="Ẩn báo giá" onClick={() => handleArchive(qt.id)}>
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        ) : (
+                          <Button variant="ghost" size="icon" className="h-8 w-8 bg-zinc-100 hover:bg-zinc-200" title="Khôi phục" onClick={() => handleRestore(qt.id)}>
+                            <RotateCcw className="h-4 w-4 text-green-500" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                  
+                  {/* Mobile Actions Row */}
+                  <TableRow className="md:hidden bg-zinc-50/30 hover:bg-zinc-50/30 border-t-0">
+                    <TableCell colSpan={4} className="pt-2 pb-4">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <a href={`/api/quotations/${qt.id}/pdf`} target="_blank" rel="noreferrer" title="Tải PDF">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 bg-zinc-100 hover:bg-zinc-200"><FileText className="h-4 w-4 text-red-500" /></Button>
+                        </a>
+                        <a href={`/api/quotations/${qt.id}/excel`} target="_blank" rel="noreferrer" title="Tải Excel">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 bg-zinc-100 hover:bg-zinc-200"><FileSpreadsheet className="h-4 w-4 text-green-600" /></Button>
+                        </a>
+                        <Link href={`/quotations/${qt.id}/delivery-note`} target="_blank">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 bg-zinc-100 hover:bg-zinc-200" title="In phiếu xuất kho bán hàng"><Package className="h-4 w-4 text-orange-600" /></Button>
+                        </Link>
+                        <Link href={`/quotations/${qt.id}/edit`}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 bg-zinc-100 hover:bg-zinc-200" title="Chỉnh sửa">
+                            <Pencil className="h-4 w-4 text-blue-500" />
+                          </Button>
+                        </Link>
+                        {qt.status !== 'ACCEPTED' && qt.status !== 'REJECTED' && (
+                          <>
+                            <div className="w-px h-4 bg-zinc-200 mx-1"></div>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 bg-zinc-100 hover:bg-zinc-200" title="Chốt báo giá" onClick={() => handleUpdateStatus(qt.id, 'ACCEPTED')}>
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 bg-zinc-100 hover:bg-zinc-200" title="Huỷ báo giá" onClick={() => handleUpdateStatus(qt.id, 'REJECTED')}>
+                              <XCircle className="h-4 w-4 text-orange-500" />
+                            </Button>
+                          </>
+                        )}
                         <div className="w-px h-4 bg-zinc-200 mx-1"></div>
                         {archiveTab === 'active' ? (
                           <Button variant="ghost" size="icon" className="h-8 w-8 bg-zinc-100 hover:bg-zinc-200" title="Ẩn báo giá" onClick={() => handleArchive(qt.id)}>

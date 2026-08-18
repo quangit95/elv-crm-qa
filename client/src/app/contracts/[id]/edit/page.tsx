@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Save, Sparkles } from "lucide-react";
+import { Save, Sparkles, Trash2, FileText } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -19,13 +19,15 @@ export default function EditContractPage() {
   const [status, setStatus] = useState<string>("DRAFT");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
-  const [terms, setTerms] = useState<string>("");
+  const [clauses, setClauses] = useState<{title: string, content: string}[]>([]);
   
   const [leadTitle, setLeadTitle] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [grandTotal, setGrandTotal] = useState<number>(0);
   
   const [paymentSplit, setPaymentSplit] = useState<string>("50-50");
+  const [partyA, setPartyA] = useState({ name: "", address: "", phone: "", email: "", representative: "", role: "", taxCode: "" });
+  const [partyB, setPartyB] = useState({ name: "", address: "", phone: "", taxCode: "", bankAccount: "", representative: "", role: "" });
 
   useEffect(() => {
     if (contractId) {
@@ -36,10 +38,68 @@ export default function EditContractPage() {
           setStatus(data.status || "DRAFT");
           setStartDate(data.startDate ? new Date(data.startDate).toISOString().split('T')[0] : "");
           setEndDate(data.endDate ? new Date(data.endDate).toISOString().split('T')[0] : "");
-          setTerms(data.terms || "");
+          if (data.terms) {
+            const lines = data.terms.split('\n');
+            const result: {title: string, content: string}[] = [];
+            let currentTitle = "";
+            let currentContent: string[] = [];
+            
+            for(let line of lines) {
+              if (line.trim().toLowerCase().startsWith('điều') || line.trim().match(/^[0-9]\./)) {
+                if (currentTitle) {
+                  result.push({ title: currentTitle, content: currentContent.join('\n').trim() });
+                }
+                currentTitle = line.trim();
+                currentContent = [];
+              } else {
+                currentContent.push(line);
+              }
+            }
+            if (currentTitle || currentContent.length > 0) {
+              result.push({ title: currentTitle || "Điều khoản chung", content: currentContent.join('\n').trim() });
+            }
+            const finalResult = result.map(c => {
+              if (c.title.toUpperCase().includes("ĐIỀU 8") || c.title.toUpperCase().includes("CHUNG")) {
+                return { ...c, content: c.content.replace(/(Hợp đồng Số:\s*)[^\n]+/i, `$1${data.code || ""}`) }
+              }
+              return c;
+            });
+            setClauses(finalResult);
+          } else {
+            setClauses([]);
+          }
           setLeadTitle(data.lead?.title || "");
           setCustomerName(data.lead?.customer?.name || "");
           setGrandTotal(data.quotation?.grandTotal || 0);
+          
+          if (data.partyA) {
+            setPartyA(data.partyA);
+          } else if (data.lead?.customer) {
+            setPartyA(prev => ({
+              ...prev,
+              name: data.lead.customer.name || "",
+              address: data.lead.customer.address || "",
+              phone: data.lead.customer.phone || "",
+              email: data.lead.customer.email || "",
+            }));
+          }
+
+          if (data.partyB) {
+            setPartyB(data.partyB);
+          } else {
+            fetch("/api/settings/company")
+              .then(r => r.json())
+              .then(cdata => {
+                setPartyB(prev => ({
+                  ...prev,
+                  name: cdata.name || "CÔNG TY TNHH GIẢI PHÁP CÔNG NGHỆ VIỄN ĐÔNG",
+                  address: cdata.address || "Lô 17 đường 18A, KĐT Lê Hồng Phong 2, Phường Nam Nha Trang, Tỉnh Khánh Hòa",
+                  phone: cdata.phone || "0905.399.636",
+                  taxCode: cdata.taxCode || "4201341631",
+                  bankAccount: "121992319 - Ngân hàng TMCP Á Châu ACB Khánh Hòa PGD Phương Sơn",
+                }));
+              });
+          }
         })
         .catch(err => {
           console.error(err);
@@ -47,6 +107,7 @@ export default function EditContractPage() {
         });
     }
   }, [contractId]);
+
 
   const saveContract = async () => {
     try {
@@ -57,7 +118,9 @@ export default function EditContractPage() {
           status,
           startDate,
           endDate,
-          terms
+          partyA,
+          partyB,
+          terms: clauses.map(c => `${c.title}\n${c.content}`).join('\n\n')
         })
       });
       
@@ -74,14 +137,41 @@ export default function EditContractPage() {
     }
   };
 
-  const formatVND = (num: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
+  const saveAndPreview = async () => {
+    try {
+      const res = await fetch(`/api/contracts/${contractId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status,
+          startDate,
+          endDate,
+          partyA,
+          partyB,
+          terms: clauses.map(c => `${c.title}\n${c.content}`).join('\n\n')
+        })
+      });
+      
+      if (res.ok) {
+        alert("Cập nhật hợp đồng thành công!");
+        window.open(`/api/contracts/${contractId}/pdf`, "_blank");
+      } else {
+        const errorData = await res.json();
+        alert(`Lỗi: ${errorData.error}`);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Lỗi khi kết nối tới máy chủ");
+    }
+  };
+
+  const formatVND = (num: number) => new Intl.NumberFormat('vi-VN').format(num) + ' VNĐ';
 
   const appendPaymentTerms = () => {
-    let newText = `\n\nGiá trị hợp đồng: ${formatVND(grandTotal)}\n`;
-    newText += `Phương thức thanh toán:\n`;
+    let newText = ``;
     
     if (paymentSplit === "100") {
-      newText += `- Thanh toán 100% giá trị hợp đồng (${formatVND(grandTotal)}) ngay sau khi ký hợp đồng và bàn giao đầy đủ.`;
+      newText += `- Thanh toán 100% giá trị hợp đồng tương đương ${formatVND(grandTotal)} ngay sau khi ký hợp đồng và bàn giao đầy đủ.`;
     } else if (paymentSplit === "50-50") {
       const p50 = grandTotal * 0.5;
       newText += `- Đợt 1: Tạm ứng 50% giá trị hợp đồng tương đương ${formatVND(p50)} ngay sau khi ký kết.\n`;
@@ -100,7 +190,22 @@ export default function EditContractPage() {
       newText += `- Đợt 3: Thanh toán 20% còn lại tương đương ${formatVND(p20)} sau khi hoàn thành nghiệm thu và bàn giao.`;
     }
 
-    setTerms(prev => prev + newText);
+    let paymentClauseIndex = clauses.findIndex(c => c.title.includes("3.1") && c.title.toLowerCase().includes("thanh toán"));
+    if (paymentClauseIndex === -1) {
+      paymentClauseIndex = clauses.findIndex(c => c.title.toLowerCase().includes("thanh toán"));
+    }
+    
+    if (paymentClauseIndex === -1) {
+      alert("Không tìm thấy Điều khoản nào có chứa chữ 'Thanh toán' ở tiêu đề để chèn! Vui lòng tạo một điều khoản thanh toán.");
+      return;
+    }
+
+    const newClauses = [...clauses];
+    const existingContent = newClauses[paymentClauseIndex].content;
+    
+    const regex = /^[\s\S]*?(?=Hồ sơ thanh toán gồm có:|$)/i;
+    newClauses[paymentClauseIndex].content = existingContent.replace(regex, `${newText}\n`);
+    setClauses(newClauses);
   };
 
   return (
@@ -110,8 +215,12 @@ export default function EditContractPage() {
           <h1 className="text-3xl font-bold tracking-tight">Cập nhật Hợp Đồng</h1>
           <p className="text-zinc-500">Chỉnh sửa thông tin hợp đồng hiện tại.</p>
         </div>
-        <div className="space-x-2">
+        <div className="space-x-2 flex">
           <Button variant="outline" onClick={() => router.push("/contracts")}>Huỷ</Button>
+          <Button variant="outline" onClick={saveAndPreview} className="text-teal-600 border-teal-600 hover:bg-teal-50">
+            <FileText className="mr-2 h-4 w-4" />
+            Lưu & Xem Nhanh
+          </Button>
           <Button onClick={saveContract} size="lg">
             <Save className="mr-2 h-4 w-4" />
             Cập nhật Hợp Đồng
@@ -204,17 +313,126 @@ export default function EditContractPage() {
         </div>
 
         <div className="md:col-span-2 space-y-6">
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Bên Mua (Bên A)</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Tên đơn vị / Cá nhân</Label>
+                  <Input value={partyA.name} onChange={e => setPartyA({...partyA, name: e.target.value})} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Địa chỉ</Label>
+                  <Input value={partyA.address} onChange={e => setPartyA({...partyA, address: e.target.value})} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Điện thoại</Label>
+                    <Input value={partyA.phone} onChange={e => setPartyA({...partyA, phone: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Mã số thuế</Label>
+                    <Input value={partyA.taxCode} onChange={e => setPartyA({...partyA, taxCode: e.target.value})} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  <Input value={partyA.email} onChange={e => setPartyA({...partyA, email: e.target.value})} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Người đại diện</Label>
+                    <Input value={partyA.representative} onChange={e => setPartyA({...partyA, representative: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Chức vụ</Label>
+                    <Input value={partyA.role} onChange={e => setPartyA({...partyA, role: e.target.value})} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Bên Bán (Bên B)</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Tên đơn vị</Label>
+                  <Input value={partyB.name} onChange={e => setPartyB({...partyB, name: e.target.value})} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Địa chỉ</Label>
+                  <Input value={partyB.address} onChange={e => setPartyB({...partyB, address: e.target.value})} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Điện thoại</Label>
+                    <Input value={partyB.phone} onChange={e => setPartyB({...partyB, phone: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Mã số thuế</Label>
+                    <Input value={partyB.taxCode} onChange={e => setPartyB({...partyB, taxCode: e.target.value})} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Tài khoản ngân hàng</Label>
+                  <Input value={partyB.bankAccount} onChange={e => setPartyB({...partyB, bankAccount: e.target.value})} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Người đại diện</Label>
+                    <Input value={partyB.representative} onChange={e => setPartyB({...partyB, representative: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Chức vụ</Label>
+                    <Input value={partyB.role} onChange={e => setPartyB({...partyB, role: e.target.value})} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           <Card className="h-full">
             <CardHeader>
               <CardTitle>Nội dung Điều khoản</CardTitle>
             </CardHeader>
-            <CardContent>
-              <Textarea 
-                className="min-h-[500px] text-base leading-relaxed" 
-                placeholder="Nhập nội dung các điều khoản hợp đồng..."
-                value={terms}
-                onChange={(e) => setTerms(e.target.value)}
-              />
+            <CardContent className="space-y-4">
+              {clauses.map((clause, idx) => (
+                <div key={idx} className="p-4 border rounded-md bg-zinc-50 dark:bg-zinc-900 space-y-3 relative">
+                  <div className="flex items-center gap-2">
+                    <Input 
+                      value={clause.title} 
+                      onChange={e => {
+                        const nc = [...clauses];
+                        nc[idx].title = e.target.value;
+                        setClauses(nc);
+                      }}
+                      className="font-bold bg-transparent text-lg border-none px-0 shadow-none focus-visible:ring-0"
+                      placeholder="Tên điều khoản (VD: Điều 1: Giá trị)"
+                    />
+                    <Button variant="ghost" size="icon" onClick={() => setClauses(clauses.filter((_, i) => i !== idx))} className="text-red-500 shrink-0">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <Textarea 
+                    value={clause.content}
+                    onChange={e => {
+                      const nc = [...clauses];
+                      nc[idx].content = e.target.value;
+                      setClauses(nc);
+                    }}
+                    className="min-h-[120px] text-base leading-relaxed bg-white dark:bg-zinc-950"
+                    placeholder="Nhập nội dung điều khoản..."
+                  />
+                </div>
+              ))}
+              <Button variant="outline" className="w-full border-dashed py-8 text-zinc-500" onClick={() => setClauses([...clauses, { title: `Điều ${clauses.length + 1}: Điều khoản mới`, content: "" }])}>
+                + Thêm Điều Khoản Mới
+              </Button>
             </CardContent>
           </Card>
         </div>

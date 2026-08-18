@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import path from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     // contract_template.txt is at the root folder

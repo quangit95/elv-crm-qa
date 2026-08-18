@@ -1,6 +1,7 @@
 import PDFDocument from 'pdfkit'
 import { NextResponse } from 'next/server'
 import path from 'path'
+import { numberToVietnameseWords } from './numberToWords'
 
 const toRoman = (num: number): string => {
   const roman = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX"];
@@ -43,14 +44,9 @@ export async function generateContractPDF(contract: any, company: any): Promise<
 
     // --- HEADER ---
     setFont('bold', 10)
-    doc.text(company?.name || 'CÔNG TY TNHH GIẢI PHÁP CÔNG NGHỆ VIỄN ĐÔNG', 85, 57)
-    setFont('normal', 9)
-    doc.text(company?.address || 'Lô 17 đường 18A, KĐT Lê Hồng Phong 2, P Nam Nha Trang, Tỉnh Khánh Hòa', 85, 72)
-
-    setFont('bold', 10)
-    doc.text('CỘNG HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM', 85, 57, { width: 453, align: 'right' })
+    doc.text('CỘNG HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM', 85, 57, { width: 453, align: 'center' })
     setFont('bold', 9)
-    doc.text('Độc lập – Tự do – Hạnh phúc', 85, 72, { width: 453, align: 'right', underline: true })
+    doc.text('Độc lập – Tự do – Hạnh phúc', 85, 72, { width: 453, align: 'center', underline: true })
 
     // --- TITLE ---
     doc.moveDown(4)
@@ -62,35 +58,46 @@ export async function generateContractPDF(contract: any, company: any): Promise<
 
     // --- BASIS ---
     setFont('normal', 10)
-    doc.text('Căn cứ Bộ luật dân sự số 91/2015/QH13 ngày 24/11/2015.')
-    doc.text('Căn cứ Bộ Luật Thương mại số 36/2005/QH11 ngày 14/06/2005.')
-    doc.text('Căn cứ nhu cầu và khả năng của hai bên.')
+    doc.text('- Căn cứ Bộ luật dân sự số 91/2015/QH13 ngày 24/11/2015.')
+    doc.text('- Căn cứ Bộ Luật Thương mại số 36/2005/QH11 ngày 14/06/2005.')
+    doc.text('- Căn cứ các quy định pháp luật hiện hành có liên quan.')
+    doc.text('- Căn cứ nhu cầu và khả năng của hai bên.')
     
     const createdDate = new Date(contract.createdAt)
     doc.moveDown(1)
     doc.text(`Hôm nay, ngày ${createdDate.getDate()} tháng ${createdDate.getMonth()+1} năm ${createdDate.getFullYear()} chúng tôi gồm:`)
     doc.moveDown(1)
 
+    const partyA = (contract.partyA as any) || {};
+    const partyB = (contract.partyB as any) || {};
+
     // --- PARTIES ---
     setFont('bold', 11)
-    doc.text('Bên Mua (Bên A):')
+    doc.text('Bên Mua (Bên A): ', { continued: true })
     setFont('bold', 10)
-    doc.text(contract.lead?.customer?.name || '...')
+    doc.text(partyA.name || contract.lead?.customer?.name || '...')
     setFont('normal', 10)
-    doc.text(`Điện thoại: ${contract.lead?.customer?.phone || '...'}`)
-    doc.text(`Email: ${contract.lead?.customer?.email || '...'}`)
-    doc.text(`Địa chỉ: ${contract.lead?.customer?.address || '...'}`)
+    doc.text(`Địa chỉ: ${partyA.address || contract.lead?.customer?.address || '...'}`)
+    doc.text(`Điện thoại: ${partyA.phone || contract.lead?.customer?.phone || '...'}`)
+    if (partyA.taxCode) doc.text(`Mã số thuế: ${partyA.taxCode}`)
+    doc.text(`Email: ${partyA.email || contract.lead?.customer?.email || '...'}`)
+    if (partyA.representative) {
+      doc.text(`Đại diện: ${partyA.representative} - Chức vụ: ${partyA.role || '...'}`)
+    }
     
     doc.moveDown(1)
     setFont('bold', 11)
-    doc.text('Bên Bán (Bên B):')
+    doc.text('Bên Bán (Bên B): ', { continued: true })
     setFont('bold', 10)
-    doc.text(company?.name || 'CÔNG TY TNHH GIẢI PHÁP CÔNG NGHỆ VIỄN ĐÔNG')
+    doc.text(partyB.name || company?.name || 'CÔNG TY TNHH GIẢI PHÁP CÔNG NGHỆ VIỄN ĐÔNG')
     setFont('normal', 10)
-    doc.text(`Địa chỉ: ${company?.address || 'Lô 17 đường 18A, KĐT Lê Hồng Phong 2, Phường Nam Nha Trang, Tỉnh Khánh Hòa'}`)
-    doc.text(`Điện thoại: ${company?.phone || '0905.399.636'}`)
-    doc.text(`Mã số thuế: ${company?.taxCode || '4201341631'}`)
-    doc.text('Tài khoản: 121992319 - Ngân hàng TMCP Á Châu ACB Khánh Hòa PGD Phương Sơn')
+    doc.text(`Địa chỉ: ${partyB.address || company?.address || 'Lô 17 đường 18A, KĐT Lê Hồng Phong 2, Phường Nam Nha Trang, Tỉnh Khánh Hòa'}`)
+    doc.text(`Điện thoại: ${partyB.phone || company?.phone || '0905.399.636'}`)
+    doc.text(`Mã số thuế: ${partyB.taxCode || company?.taxCode || '4201341631'}`)
+    doc.text(`Tài khoản: ${partyB.bankAccount || '121992319 - Ngân hàng TMCP Á Châu ACB Khánh Hòa PGD Phương Sơn'}`)
+    if (partyB.representative) {
+      doc.text(`Đại diện: ${partyB.representative} - Chức vụ: ${partyB.role || '...'}`)
+    }
 
     doc.moveDown(2)
     doc.text('Sau khi thỏa thuận, hai bên đồng ý ký kết hợp đồng mua với nội dung như sau:')
@@ -199,10 +206,20 @@ export async function generateContractPDF(contract: any, company: any): Promise<
       
       y += 20
       doc.y = y
+      
+      doc.moveDown(1)
+      setFont('normal', 10)
+      doc.text(`(Bằng chữ: ${numberToVietnameseWords(quotation.grandTotal).replace('đồng chẵn.', 'đồng ./.')})`, boxX, doc.y, { width: boxW, align: 'left' })
+      
+      doc.moveDown(0.5)
+      setFont('normal', 10)
+      doc.text('1.1 Giá trên đã bao gồm 8% thuế GTGT, phí vận chuyển và tất cả chi phí để thực hiện Hợp đồng.', boxX, doc.y, { width: boxW, align: 'justify' })
+      doc.moveDown(0.2)
+      doc.text('1.2 Trường hợp Bên A có yêu cầu mua hàng thêm ngoài số lượng đã ghi trong hợp đồng thì hai bên phải có văn bản xác nhận và có đóng dấu chữ ký của người có thẩm quyền hoặc có Phụ lục bổ sung. Khi thanh toán Bên A căn cứ vào văn bản xác nhận hoặc Phụ lục kèm theo hợp đồng để thanh toán.', boxX, doc.y, { width: boxW, align: 'justify' })
     }
 
     doc.moveDown(2)
-    doc.y = y + 20
+    doc.y = doc.y + 10
 
     // --- DYNAMIC TERMS ---
     setFont('normal', 10)
@@ -210,12 +227,22 @@ export async function generateContractPDF(contract: any, company: any): Promise<
     // The terms string from DB (Điều 2, Điều 3, v.v...)
     if (contract.terms) {
       const lines = contract.terms.split('\n')
+      let skipMode = false;
       lines.forEach((line: string) => {
-        if (line.trim().startsWith('Điều') || line.trim().match(/^[0-9]\./)) {
+        const lowerLine = line.trim().toLowerCase();
+        
+        if (lowerLine.startsWith('điều') || line.trim().match(/^[0-9]\./)) {
+          if (lowerLine.startsWith('điều 1') || lowerLine.match(/^1\./)) {
+            skipMode = true;
+          } else {
+            skipMode = false;
+          }
           setFont('bold', 11)
         } else {
           setFont('normal', 10)
         }
+        
+        if (skipMode) return;
         
         checkPageBreak(15)
         doc.text(line, boxX, doc.y, { width: boxW, align: 'justify' })

@@ -23,7 +23,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const { code, quotationId, startDate, endDate, terms } = await req.json();
+    const { code, quotationId, startDate, endDate, terms, partyA, partyB } = await req.json();
     
     // Validate quotation
     const quotation = await prisma.quotation.findUnique({
@@ -54,6 +54,8 @@ export async function POST(req: Request) {
           startDate: startDate ? new Date(startDate) : null,
           endDate: endDate ? new Date(endDate) : null,
           terms,
+          partyA,
+          partyB,
           status: 'DRAFT'
         }
       });

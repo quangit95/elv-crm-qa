@@ -367,33 +367,33 @@ export default function EditQuotationPage() {
                   
                   <div className="overflow-x-auto">
                     <div className="min-w-[800px]">
-                      <div className="grid grid-cols-12 gap-2 text-sm font-semibold text-zinc-500 mb-2 px-2">
-                        <div className="col-span-7">Mặt hàng / Thiết bị</div>
-                        <div className="col-span-1 text-center">ĐVT</div>
-                        <div className="col-span-1 text-center">S.Lượng</div>
-                        <div className="col-span-1 text-right">Đơn giá</div>
-                        <div className="col-span-1 text-right">T.Tiền</div>
+                      <div className="grid grid-cols-[minmax(200px,1fr)_60px_70px_110px_110px_40px] gap-2 text-sm font-semibold text-zinc-500 mb-2 px-2">
+                        <div>Mặt hàng / Thiết bị</div>
+                        <div className="text-center">ĐVT</div>
+                        <div className="text-center">S.Lượng</div>
+                        <div className="text-right">Đơn giá</div>
+                        <div className="text-right">T.Tiền</div>
                         <div className="col-span-1"></div>
                       </div>
 
                       <div className="space-y-2">
                     {section.items.map((item, iIdx) => (
-                      <div key={iIdx} className="grid grid-cols-12 gap-2 items-center py-1.5 border-b border-zinc-200 dark:border-zinc-800 last:border-b-0">
-                        <div className="col-span-7 font-medium text-sm">
+                      <div key={iIdx} className="grid grid-cols-[minmax(200px,1fr)_60px_70px_110px_110px_40px] gap-2 items-center py-1.5 border-b border-zinc-200 dark:border-zinc-800 last:border-b-0">
+                        <div className="font-medium text-sm">
                           <Input 
                             value={item.name} 
                             onChange={e => updateItem(section.id, iIdx, 'name', e.target.value)}
                             className="h-8 font-medium bg-transparent border-transparent hover:border-input focus:border-input px-1"
                           />
                         </div>
-                        <div className="col-span-1">
+                        <div>
                           <Input 
                             value={item.unit}
                             onChange={e => updateItem(section.id, iIdx, 'unit', e.target.value)}
                             className="h-8 text-center bg-transparent border-transparent hover:border-input focus:border-input px-1"
                           />
                         </div>
-                        <div className="col-span-1">
+                        <div>
                           <Input 
                             type="number" 
                             value={item.quantity} 
@@ -401,7 +401,7 @@ export default function EditQuotationPage() {
                             className="h-8 text-center px-1 bg-transparent hover:border-input focus:border-input border-transparent"
                           />
                         </div>
-                        <div className="col-span-1">
+                        <div>
                           <Input 
                             type="number" 
                             value={item.unitPrice} 
@@ -409,10 +409,10 @@ export default function EditQuotationPage() {
                             className="h-8 text-right px-1 bg-transparent hover:border-input focus:border-input border-transparent"
                           />
                         </div>
-                        <div className="col-span-1 text-right text-sm font-bold truncate" title={formatVND(item.quantity * item.unitPrice)}>
+                        <div className="text-right text-sm font-bold truncate" title={formatVND(item.quantity * item.unitPrice)}>
                           {formatVND(item.quantity * item.unitPrice)}
                         </div>
-                        <div className="col-span-1 text-right">
+                        <div className="text-right">
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-500" onClick={() => removeItem(section.id, iIdx)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>

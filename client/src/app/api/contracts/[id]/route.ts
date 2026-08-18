@@ -28,7 +28,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   try {
     const resolvedParams = await params;
     const { id } = await params;
-    const { status, startDate, endDate, terms } = await req.json();
+    const { status, startDate, endDate, terms, partyA, partyB } = await req.json();
     
     const updatedContract = await prisma.contract.update({
       where: { id },
@@ -36,7 +36,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         status,
         startDate: startDate ? new Date(startDate) : undefined,
         endDate: endDate ? new Date(endDate) : undefined,
-        terms
+        terms,
+        partyA,
+        partyB
       }
     });
     
