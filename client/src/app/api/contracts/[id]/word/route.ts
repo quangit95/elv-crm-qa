@@ -19,7 +19,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     });
     
     if (!contract) return NextResponse.json({ error: 'Contract not found' }, { status: 404 });
-    const company = await prisma.company.findFirst();
+    let company = await prisma.company.findFirst({ where: { isActive: true } });
+    if (!company) company = await prisma.company.findFirst();
     return await generateContractWord(contract, company);
   } catch (error) {
     console.error(error);

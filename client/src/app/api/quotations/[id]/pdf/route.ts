@@ -15,7 +15,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     });
     if (!quotation) return NextResponse.json({ error: 'Quotation not found' }, { status: 404 });
     
-    const company = await prisma.company.findFirst();
+    let company = await prisma.company.findFirst({ where: { isActive: true } });
+    if (!company) company = await prisma.company.findFirst();
     return await generateQuotationPDF(quotation, company);
   } catch (error) {
     console.error(error);
