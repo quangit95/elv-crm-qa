@@ -87,7 +87,7 @@ const ProductSearchBox = ({ catalog, onSelectMultiple }: { catalog: CatalogItem[
         className="bg-white dark:bg-zinc-950"
       />
       {open && (
-        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-zinc-950 border rounded-md shadow-lg flex flex-col overflow-hidden" style={{ maxHeight: '300px' }}>
+        <div className="absolute z-50 w-[150%] max-w-[90vw] mt-1 bg-white dark:bg-zinc-950 border rounded-md shadow-lg flex flex-col overflow-hidden left-0" style={{ maxHeight: '300px' }}>
           <div className="overflow-y-auto flex-1">
             {filtered.length === 0 ? (
               <div className="p-2 text-sm text-zinc-500 text-center py-4">Không tìm thấy thiết bị nào.</div>
@@ -459,14 +459,14 @@ export default function NewQuotationPage() {
                   </Dialog>
                 </div>
                 <Select onValueChange={(v) => setSelectedLead(v || "")} value={selectedLead}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Chọn Dự án...">
                       {selectedLead && leads.find(l => l.id === selectedLead) 
                         ? `${leads.find(l => l.id === selectedLead)!.title} (${leads.find(l => l.id === selectedLead)!.customer?.name})` 
                         : null}
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="w-[90vw] md:w-auto max-w-[500px]">
                     {leads.map(l => (
                       <SelectItem key={l.id} value={l.id}>{l.title} ({l.customer?.name})</SelectItem>
                     ))}
