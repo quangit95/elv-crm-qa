@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2, FileText, FileSpreadsheet, Share2 } from "lucide-react";
@@ -110,7 +110,7 @@ export default function ContractsPage() {
               <TableHead>Ngày Ký (Bắt đầu)</TableHead>
               <TableHead className="text-right">Giá Trị</TableHead>
               <TableHead>Trạng Thái</TableHead>
-              <TableHead className="text-right">Hành động</TableHead>
+              <TableHead className="text-right hidden md:table-cell">Hành động</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -128,52 +128,84 @@ export default function ContractsPage() {
               </TableRow>
             ) : (
               contracts.map((contract) => (
-                <TableRow key={contract.id}>
-                  <TableCell className="font-medium">
-                    <a href={`/api/contracts/${contract.id}/pdf`} target="_blank" rel="noreferrer" className="text-primary hover:underline" title="Xem nhanh PDF">
-                      {contract.code}
-                    </a>
-                  </TableCell>
-                  <TableCell>
-                    <p className="font-medium">{contract.lead?.title}</p>
-                    <p className="text-xs text-zinc-500">{contract.lead?.customer?.name}</p>
-                  </TableCell>
-                  <TableCell>
-                    {contract.startDate ? new Date(contract.startDate).toLocaleDateString("vi-VN") : "---"}
-                  </TableCell>
-                  <TableCell className="text-right font-bold">
-                    {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(contract.totalValue)}
-                  </TableCell>
-                  <TableCell>
-                    {getStatusBadge(contract.status)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end items-center gap-2">
-                      <a href={`/api/contracts/${contract.id}/pdf`} target="_blank" rel="noreferrer">
-                        <Button variant="ghost" size="icon" title="Xem PDF">
-                          <FileText className="h-4 w-4 text-red-500" />
-                        </Button>
+                <React.Fragment key={contract.id}>
+                  <TableRow className="border-b-0 hover:bg-zinc-50/50">
+                    <TableCell className="font-medium">
+                      <a href={`/api/contracts/${contract.id}/pdf`} target="_blank" rel="noreferrer" className="text-primary hover:underline" title="Xem nhanh PDF">
+                        {contract.code}
                       </a>
-                      <a href={`/api/contracts/${contract.id}/word`} target="_blank" rel="noreferrer">
-                        <Button variant="ghost" size="icon" title="Xuất Word">
-                          <FileText className="h-4 w-4 text-blue-600" />
+                    </TableCell>
+                    <TableCell>
+                      <p className="font-medium">{contract.lead?.title}</p>
+                      <p className="text-xs text-zinc-500">{contract.lead?.customer?.name}</p>
+                    </TableCell>
+                    <TableCell>
+                      {contract.startDate ? new Date(contract.startDate).toLocaleDateString("vi-VN") : "---"}
+                    </TableCell>
+                    <TableCell className="text-right font-bold text-primary">
+                      {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(contract.totalValue)}
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(contract.status)}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-right align-middle">
+                      <div className="flex justify-end items-center gap-2">
+                        <a href={`/api/contracts/${contract.id}/pdf`} target="_blank" rel="noreferrer">
+                          <Button variant="ghost" size="icon" title="Xem PDF" className="h-8 w-8 bg-zinc-100 hover:bg-zinc-200">
+                            <FileText className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </a>
+                        <a href={`/api/contracts/${contract.id}/word`} target="_blank" rel="noreferrer">
+                          <Button variant="ghost" size="icon" title="Xuất Word" className="h-8 w-8 bg-zinc-100 hover:bg-zinc-200">
+                            <FileText className="h-4 w-4 text-blue-600" />
+                          </Button>
+                        </a>
+                        <Button variant="ghost" size="icon" title="Chia sẻ" onClick={() => handleShare(contract)} className="h-8 w-8 bg-zinc-100 hover:bg-zinc-200">
+                          <Share2 className="h-4 w-4 text-blue-600" />
                         </Button>
-                      </a>
-                      <Button variant="ghost" size="icon" title="Chia sẻ" onClick={() => handleShare(contract)}>
-                        <Share2 className="h-4 w-4 text-blue-600" />
-                      </Button>
-                      <div className="w-px h-4 bg-zinc-200 mx-1"></div>
-                      <Link href={`/contracts/${contract.id}/edit`}>
-                        <Button variant="ghost" size="icon" title="Chỉnh sửa">
-                          <Pencil className="h-4 w-4 text-blue-500" />
+                        <div className="w-px h-4 bg-zinc-200 mx-1"></div>
+                        <Link href={`/contracts/${contract.id}/edit`}>
+                          <Button variant="ghost" size="icon" title="Chỉnh sửa" className="h-8 w-8 bg-zinc-100 hover:bg-zinc-200">
+                            <Pencil className="h-4 w-4 text-blue-500" />
+                          </Button>
+                        </Link>
+                        <Button variant="ghost" size="icon" title="Xoá" onClick={() => handleDelete(contract.id)} className="h-8 w-8 bg-red-50 hover:bg-red-100 text-red-600">
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                      </Link>
-                      <Button variant="ghost" size="icon" title="Xoá" onClick={() => handleDelete(contract.id)}>
-                        <Trash2 className="h-4 w-4 text-zinc-500 hover:text-red-500" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                  
+                  {/* Mobile Actions Row */}
+                  <TableRow className="md:hidden bg-zinc-50/30 hover:bg-zinc-50/30 border-t-0">
+                    <TableCell colSpan={5} className="pt-2 pb-4">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <a href={`/api/contracts/${contract.id}/pdf`} target="_blank" rel="noreferrer">
+                          <Button variant="ghost" size="icon" title="Xem PDF" className="h-8 w-8 bg-zinc-100 hover:bg-zinc-200">
+                            <FileText className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </a>
+                        <a href={`/api/contracts/${contract.id}/word`} target="_blank" rel="noreferrer">
+                          <Button variant="ghost" size="icon" title="Xuất Word" className="h-8 w-8 bg-zinc-100 hover:bg-zinc-200">
+                            <FileText className="h-4 w-4 text-blue-600" />
+                          </Button>
+                        </a>
+                        <Button variant="ghost" size="icon" title="Chia sẻ" onClick={() => handleShare(contract)} className="h-8 w-8 bg-zinc-100 hover:bg-zinc-200">
+                          <Share2 className="h-4 w-4 text-blue-600" />
+                        </Button>
+                        <div className="w-px h-4 bg-zinc-200 mx-1"></div>
+                        <Link href={`/contracts/${contract.id}/edit`}>
+                          <Button variant="ghost" size="icon" title="Chỉnh sửa" className="h-8 w-8 bg-zinc-100 hover:bg-zinc-200">
+                            <Pencil className="h-4 w-4 text-blue-500" />
+                          </Button>
+                        </Link>
+                        <Button variant="ghost" size="icon" title="Xoá" onClick={() => handleDelete(contract.id)} className="h-8 w-8 bg-red-50 hover:bg-red-100 text-red-600">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                </React.Fragment>
               ))
             )}
           </TableBody>
