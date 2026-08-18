@@ -99,7 +99,7 @@ export async function generateContractWord(contract: any, company: any) {
           new Paragraph({ text: "" }),
           new Paragraph({
             children: [
-              new TextRun({ text: "Tổng Cộng (VND) đã bao gồm VAT: ", bold: true }),
+              new TextRun({ text: `Tổng Cộng (VND)${quotation?.tax ? " đã bao gồm VAT" : ""}: `, bold: true }),
               new TextRun({ text: quotation?.grandTotal.toLocaleString("vi-VN") || "0", bold: true }),
             ],
             alignment: AlignmentType.RIGHT,

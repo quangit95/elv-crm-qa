@@ -202,18 +202,24 @@ export async function generateQuotationExcel(quotation: any, company: any) {
     }
   }
 
-  const subTotalRow = sheet.getRow(rowIndex)
-  formatTotalRow(subTotalRow, 'Tổng chưa bao gồm VAT (VND)', quotation.totalAmount - quotation.discount, true)
-  rowIndex++
-
   const taxVal = (quotation.totalAmount - quotation.discount) * (quotation.tax / 100)
-  const taxRow = sheet.getRow(rowIndex)
-  formatTotalRow(taxRow, `VAT ${quotation.tax}%`, taxVal, true)
-  rowIndex++
+  if (quotation.tax > 0) {
+    const subTotalRow = sheet.getRow(rowIndex)
+    formatTotalRow(subTotalRow, 'Tổng chưa bao gồm VAT (VND)', quotation.totalAmount - quotation.discount, true)
+    rowIndex++
 
-  const grandTotalRow = sheet.getRow(rowIndex)
-  formatTotalRow(grandTotalRow, 'Tổng Cộng (VND)', quotation.grandTotal, true)
-  rowIndex++
+    const taxRow = sheet.getRow(rowIndex)
+    formatTotalRow(taxRow, `VAT ${quotation.tax}%`, taxVal, true)
+    rowIndex++
+
+    const grandTotalRow = sheet.getRow(rowIndex)
+    formatTotalRow(grandTotalRow, 'Tổng Cộng (VND) đã bao gồm VAT', quotation.grandTotal, true)
+    rowIndex++
+  } else {
+    const grandTotalRow = sheet.getRow(rowIndex)
+    formatTotalRow(grandTotalRow, 'Tổng Cộng (VND)', quotation.grandTotal, true)
+    rowIndex++
+  }
 
   // Terms and conditions
   rowIndex += 2
@@ -224,8 +230,10 @@ export async function generateQuotationExcel(quotation: any, company: any) {
   rowIndex++
   sheet.getCell(`A${rowIndex}`).value = '- Giá đã bao gồm: phí vận chuyển, và hỗ trợ tại chỗ'
   rowIndex++
-  sheet.getCell(`A${rowIndex}`).value = `- Chưa bao gồm ${quotation.tax}% VAT`
-  rowIndex++
+  if (quotation.tax > 0) {
+    sheet.getCell(`A${rowIndex}`).value = `- Chưa bao gồm ${quotation.tax}% VAT`
+    rowIndex++
+  }
   sheet.getCell(`A${rowIndex}`).value = '- Báo giá này có giá trị trong vòng 30 ngày'
 
   const buffer = await workbook.xlsx.writeBuffer();

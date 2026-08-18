@@ -194,7 +194,7 @@ export async function generateContractPDF(contract: any, company: any): Promise<
       doc.moveTo(boxX + 370, y).lineTo(boxX + 370, y + 20).stroke()
       
       setFont('bold', 9)
-      doc.text('Tổng Cộng (VND) đã bao gồm VAT', boxX, y + 6, { width: 360, align: 'right' })
+      doc.text(`Tổng Cộng (VND)${quotation.tax > 0 ? ' đã bao gồm VAT' : ''}`, boxX, y + 6, { width: 360, align: 'right' })
       doc.text(quotation.grandTotal.toLocaleString('vi-VN'), boxX + 370, y + 6, { width: 80, align: 'right' })
       
       y += 20

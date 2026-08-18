@@ -484,6 +484,7 @@ export default function NewQuotationPage() {
                     <SelectValue placeholder="Chọn mức thuế..." />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="0">0%</SelectItem>
                     <SelectItem value="8">8%</SelectItem>
                     <SelectItem value="10">10%</SelectItem>
                   </SelectContent>
@@ -505,10 +506,12 @@ export default function NewQuotationPage() {
                 <span className="text-zinc-500">Chiết khấu:</span>
                 <span className="text-red-500 font-semibold">-{formatVND(discount)} ₫</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-zinc-500">VAT ({tax}%):</span>
-                <span className="font-semibold">{formatVND(taxAmount)} ₫</span>
-              </div>
+              {tax > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-zinc-500">VAT ({tax}%):</span>
+                  <span className="font-semibold">{formatVND(taxAmount)} ₫</span>
+                </div>
+              )}
               <div className="pt-4 border-t flex justify-between items-center">
                 <span className="font-bold">Tổng Thanh Toán:</span>
                 <span className="text-xl font-bold text-primary">{formatVND(grandTotal)} ₫</span>

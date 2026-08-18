@@ -171,11 +171,13 @@ export default function DeliveryNotePage() {
               <td className="border border-black p-2 text-center" colSpan={6}>Cộng tiền hàng</td>
               <td className="border border-black p-2 text-right">{formatVND(totalAmount)}</td>
             </tr>
-            <tr className="font-bold">
-              <td className="border border-black p-2" colSpan={4}>Thuế suất GTGT: <span className="float-right">{taxRate} %</span></td>
-              <td className="border border-black p-2 text-center" colSpan={2}>Tiền thuế GTGT:</td>
-              <td className="border border-black p-2 text-right">{formatVND(taxAmount)}</td>
-            </tr>
+            {taxRate > 0 && (
+              <tr className="font-bold">
+                <td className="border border-black p-2" colSpan={4}>Thuế suất GTGT: <span className="float-right">{taxRate} %</span></td>
+                <td className="border border-black p-2 text-center" colSpan={2}>Tiền thuế GTGT:</td>
+                <td className="border border-black p-2 text-right">{formatVND(taxAmount)}</td>
+              </tr>
+            )}
             <tr className="font-bold">
               <td className="border border-black p-2 text-center" colSpan={6}>Tổng tiền thanh toán</td>
               <td className="border border-black p-2 text-right">{formatVND(grandTotal)}</td>

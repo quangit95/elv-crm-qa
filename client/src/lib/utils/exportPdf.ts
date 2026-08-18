@@ -227,10 +227,14 @@ export async function generateQuotationPDF(quotation: any, company: any): Promis
       y += 20
     }
 
-    drawTotalRow('Tổng chưa bao gồm VAT (VND)', (quotation.totalAmount - quotation.discount).toLocaleString('vi-VN'), true)
     const taxVal = (quotation.totalAmount - quotation.discount) * (quotation.tax / 100)
-    drawTotalRow(`VAT ${quotation.tax}%`, taxVal.toLocaleString('vi-VN'), true)
-    drawTotalRow('Tổng Cộng (VND)', quotation.grandTotal.toLocaleString('vi-VN'), true)
+    if (quotation.tax > 0) {
+      drawTotalRow('Tổng chưa bao gồm VAT (VND)', (quotation.totalAmount - quotation.discount).toLocaleString('vi-VN'), true)
+      drawTotalRow(`VAT ${quotation.tax}%`, taxVal.toLocaleString('vi-VN'), true)
+      drawTotalRow('Tổng Cộng (VND) đã bao gồm VAT', quotation.grandTotal.toLocaleString('vi-VN'), true)
+    } else {
+      drawTotalRow('Tổng Cộng (VND)', quotation.grandTotal.toLocaleString('vi-VN'), true)
+    }
 
     y += 20
     checkPageBreak(100)
@@ -243,8 +247,10 @@ export async function generateQuotationPDF(quotation: any, company: any): Promis
     y += 15
     doc.text('- Giá đã bao gồm: phí vận chuyển, và hỗ trợ tại chỗ', boxX, y)
     y += 15
-    doc.text(`- Chưa bao gồm ${quotation.tax}% VAT`, boxX, y)
-    y += 15
+    if (quotation.tax > 0) {
+      doc.text(`- Chưa bao gồm ${quotation.tax}% VAT`, boxX, y)
+      y += 15
+    }
     doc.text('- Báo giá này có giá trị trong vòng 30 ngày', boxX, y)
 
     doc.end()
