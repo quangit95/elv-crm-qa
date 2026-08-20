@@ -15,14 +15,14 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const { name, phone, email, address, taxCode, logo, representative } = await req.json();
+    const { name, phone, email, address, taxCode, logo, bankAccount, bankName, bankAccountName, representative } = await req.json();
     
     // Check if any company exists. If not, make this one active by default.
     const count = await prisma.company.count();
     const isActive = count === 0;
 
     const company = await prisma.company.create({
-      data: { name, phone, email, address, taxCode, logo, representative, isActive }
+      data: { name, phone, email, address, taxCode, logo, bankAccount, bankName, bankAccountName, representative, isActive }
     });
     return NextResponse.json(company);
   } catch (error) {

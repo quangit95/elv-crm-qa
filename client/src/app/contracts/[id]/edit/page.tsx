@@ -27,7 +27,7 @@ export default function EditContractPage() {
   
   const [paymentSplit, setPaymentSplit] = useState<string>("50-50");
   const [partyA, setPartyA] = useState({ name: "", address: "", phone: "", email: "", representative: "", role: "", taxCode: "" });
-  const [partyB, setPartyB] = useState({ name: "", address: "", phone: "", taxCode: "", bankAccount: "", representative: "", role: "" });
+  const [partyB, setPartyB] = useState({ name: "", address: "", phone: "", taxCode: "", bankAccount: "", bankAccountName: "", representative: "", role: "" });
 
   useEffect(() => {
     if (contractId) {
@@ -96,7 +96,8 @@ export default function EditContractPage() {
                   address: cdata.address || "Lô 17 đường 18A, KĐT Lê Hồng Phong 2, Phường Nam Nha Trang, Tỉnh Khánh Hòa",
                   phone: cdata.phone || "0905.399.636",
                   taxCode: cdata.taxCode || "4201341631",
-                  bankAccount: "121992319 - Ngân hàng TMCP Á Châu ACB Khánh Hòa PGD Phương Sơn",
+                  bankAccount: cdata.bankAccount ? (cdata.bankAccount + (cdata.bankName ? ` - ${cdata.bankName}` : '')) : "121992319 - Ngân hàng TMCP Á Châu ACB Khánh Hòa PGD Phương Sơn",
+                  bankAccountName: cdata.bankAccountName || "",
                 }));
               });
           }
@@ -381,6 +382,10 @@ export default function EditContractPage() {
                 <div className="space-y-2">
                   <Label>Tài khoản ngân hàng</Label>
                   <Input value={partyB.bankAccount} onChange={e => setPartyB({...partyB, bankAccount: e.target.value})} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Tên tài khoản (chủ TK)</Label>
+                  <Input value={partyB.bankAccountName} onChange={e => setPartyB({...partyB, bankAccountName: e.target.value})} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">

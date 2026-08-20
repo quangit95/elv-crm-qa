@@ -15,6 +15,9 @@ type Company = {
   address: string;
   taxCode: string;
   logo: string;
+  bankAccount?: string;
+  bankName?: string;
+  bankAccountName?: string;
   representative: string;
   isActive: boolean;
 };
@@ -38,6 +41,9 @@ export function CompanyForm() {
     address: "",
     taxCode: "",
     logo: "",
+    bankAccount: "",
+    bankName: "",
+    bankAccountName: "",
     representative: "",
   };
   const [formData, setFormData] = useState(defaultFormData);
@@ -70,6 +76,9 @@ export function CompanyForm() {
         address: company.address || "",
         taxCode: company.taxCode || "",
         logo: company.logo || "",
+        bankAccount: company.bankAccount || "",
+        bankName: company.bankName || "",
+        bankAccountName: company.bankAccountName || "",
         representative: company.representative || "",
       });
     } else {
@@ -308,8 +317,44 @@ export function CompanyForm() {
                 <Input id="logo" name="logo" value={formData.logo} onChange={handleChange} className="bg-zinc-950 border-zinc-800 text-white" placeholder="https://example.com/logo.png" />
               </div>
             </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="bankAccount" className="text-zinc-300">Số tài khoản ngân hàng</Label>
+                <Input
+                  id="bankAccount"
+                  name="bankAccount"
+                  value={formData.bankAccount}
+                  onChange={handleChange}
+                  placeholder="VD: 121992319"
+                  className="bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-600 focus-visible:ring-primary"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bankName" className="text-zinc-300">Tên ngân hàng</Label>
+                <Input
+                  id="bankName"
+                  name="bankName"
+                  value={formData.bankName}
+                  onChange={handleChange}
+                  placeholder="VD: ACB Khánh Hòa"
+                  className="bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-600 focus-visible:ring-primary"
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="bankAccountName" className="text-zinc-300">Tên tài khoản (chủ TK)</Label>
+                <Input
+                  id="bankAccountName"
+                  name="bankAccountName"
+                  value={formData.bankAccountName}
+                  onChange={handleChange}
+                  placeholder="VD: LÊ NHẬT QUANG"
+                  className="bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-600 focus-visible:ring-primary"
+                />
+              </div>
+            </div>
 
-            <div className="pt-4 flex justify-end gap-2">
+            <div className="flex justify-end gap-3 mt-6">
               <Button type="button" variant="outline" className="border-zinc-700 text-zinc-300" onClick={() => setIsDialogOpen(false)}>Hủy</Button>
               <Button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                 {saving ? "Đang lưu..." : "Lưu thay đổi"}

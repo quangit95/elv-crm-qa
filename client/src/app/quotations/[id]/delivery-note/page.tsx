@@ -47,6 +47,11 @@ export default function DeliveryNotePage() {
   const { quotation, company } = data;
   const customer = quotation.lead?.customer;
 
+  const createdAtDate = quotation.createdAt ? new Date(quotation.createdAt) : new Date();
+  const createdDay = createdAtDate.getDate().toString().padStart(2, '0');
+  const createdMonth = (createdAtDate.getMonth() + 1).toString().padStart(2, '0');
+  const createdYear = createdAtDate.getFullYear();
+
   // Flatten all items across all sections to match the screenshot
   const allItems: any[] = [];
   quotation.sections?.forEach((section: any) => {
@@ -115,7 +120,7 @@ export default function DeliveryNotePage() {
         {/* Title */}
         <div className="text-center mb-8">
           <h1 className="text-xl font-bold uppercase mb-1">PHIẾU XUẤT KHO BÁN HÀNG</h1>
-          <p className="italic text-sm">Ngày {new Date().getDate().toString().padStart(2, '0')} tháng {(new Date().getMonth() + 1).toString().padStart(2, '0')} năm {new Date().getFullYear()}</p>
+          <p className="italic text-sm">Ngày {createdDay} tháng {createdMonth} năm {createdYear}</p>
         </div>
 
         {/* Info Blocks */}
@@ -204,7 +209,7 @@ export default function DeliveryNotePage() {
             <div className="italic">(Ký, họ tên)</div>
           </div>
           <div className="w-1/3 flex flex-col items-center">
-            <div className="italic mb-1">Ngày ..... tháng ..... năm ........</div>
+            <div className="italic mb-1">Ngày {createdDay} tháng {createdMonth} năm {createdYear}</div>
             <div className="font-bold">Giám đốc</div>
             <div className="italic mb-24">(Ký, họ tên, đóng dấu)</div>
             <div className="font-bold">{company?.representative || ""}</div>

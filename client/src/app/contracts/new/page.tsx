@@ -32,7 +32,7 @@ export default function NewContractPage() {
   const [clauses, setClauses] = useState<{title: string, content: string}[]>([]);
   const [paymentSplit, setPaymentSplit] = useState<string>("50-50");
   const [partyA, setPartyA] = useState({ name: "", address: "", phone: "", email: "", representative: "", role: "", taxCode: "" });
-  const [partyB, setPartyB] = useState({ name: "", address: "", phone: "", taxCode: "", bankAccount: "", representative: "", role: "" });
+  const [partyB, setPartyB] = useState({ name: "", address: "", phone: "", taxCode: "", bankAccount: "", bankAccountName: "", representative: "", role: "" });
 
   useEffect(() => {
     // Lấy báo giá chưa chốt
@@ -52,7 +52,8 @@ export default function NewContractPage() {
             address: data.address || "Lô 17 đường 18A, KĐT Lê Hồng Phong 2, Phường Nam Nha Trang, Tỉnh Khánh Hòa",
             phone: data.phone || "0905.399.636",
             taxCode: data.taxCode || "4201341631",
-            bankAccount: "121992319 - Ngân hàng TMCP Á Châu ACB Khánh Hòa PGD Phương Sơn",
+            bankAccount: data.bankAccount ? (data.bankAccount + (data.bankName ? ` - ${data.bankName}` : '')) : "121992319 - Ngân hàng TMCP Á Châu ACB Khánh Hòa PGD Phương Sơn",
+            bankAccountName: data.bankAccountName || "",
           }));
         });
         
@@ -94,6 +95,41 @@ export default function NewContractPage() {
           setClauses([]);
         });
   }, []);
+
+  // Auto-replace bank info in template clauses with company data
+  const [companyData, setCompanyData] = useState<any>(null);
+  useEffect(() => {
+    fetch("/api/settings/company")
+      .then(r => r.json())
+      .then(data => setCompanyData(data))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (companyData && clauses.length > 0) {
+      const bankAccount = companyData.bankAccount || "";
+      const bankName = companyData.bankName || "";
+      const bankAccountName = companyData.bankAccountName || companyData.name || "";
+      
+      setClauses(prev => {
+        const updated = prev.map(c => {
+          let content = c.content;
+          // Replace bank account number patterns like "Số Tài khoản : XXXXX tại Ngân hàng..."
+          content = content.replace(
+            /Số\s*Tài\s*khoản\s*[:\s]*[^\n]*/gi,
+            `Số Tài khoản\t: ${bankAccount} tại ${bankName}`
+          );
+          // Replace account holder name patterns like "Chủ Tài khoản : XXXXX"
+          content = content.replace(
+            /Chủ\s*Tài\s*khoản\s*[:\s]*[^\n]*/gi,
+            `Chủ Tài khoản\t: ${bankAccountName}`
+          );
+          return content !== c.content ? { ...c, content } : c;
+        });
+        return updated;
+      });
+    }
+  }, [companyData, clauses.length]);
 
   const selectedQuotation = quotations.find(q => q.id === selectedQuotationId);
   
@@ -411,6 +447,10 @@ export default function NewContractPage() {
                 <div className="space-y-2">
                   <Label>Tài khoản ngân hàng</Label>
                   <Input value={partyB.bankAccount} onChange={e => setPartyB({...partyB, bankAccount: e.target.value})} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Tên tài khoản (chủ TK)</Label>
+                  <Input value={partyB.bankAccountName} onChange={e => setPartyB({...partyB, bankAccountName: e.target.value})} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">

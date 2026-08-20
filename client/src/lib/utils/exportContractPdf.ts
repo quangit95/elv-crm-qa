@@ -94,7 +94,13 @@ export async function generateContractPDF(contract: any, company: any): Promise<
     doc.text(`Địa chỉ: ${partyB.address || company?.address || 'Lô 17 đường 18A, KĐT Lê Hồng Phong 2, Phường Nam Nha Trang, Tỉnh Khánh Hòa'}`)
     doc.text(`Điện thoại: ${partyB.phone || company?.phone || '0905.399.636'}`)
     doc.text(`Mã số thuế: ${partyB.taxCode || company?.taxCode || '4201341631'}`)
-    doc.text(`Tài khoản: ${partyB.bankAccount || '121992319 - Ngân hàng TMCP Á Châu ACB Khánh Hòa PGD Phương Sơn'}`)
+    const defaultBank = '121992319 - Ngân hàng TMCP Á Châu ACB Khánh Hòa PGD Phương Sơn';
+    let bankInfo = defaultBank;
+    if (partyB.bankAccount) bankInfo = partyB.bankAccount + (partyB.bankName ? ` - ${partyB.bankName}` : '');
+    else if (company?.bankAccount) bankInfo = company.bankAccount + (company.bankName ? ` - ${company.bankName}` : '');
+    doc.text(`Tài khoản: ${bankInfo}`)
+    const accountName = partyB.bankAccountName || company?.bankAccountName || '';
+    if (accountName) doc.text(`Tên tài khoản: ${accountName}`)
     if (partyB.representative) {
       doc.text(`Đại diện: ${partyB.representative} - Chức vụ: ${partyB.role || '...'}`)
     }
