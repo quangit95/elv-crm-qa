@@ -132,6 +132,7 @@ const ProductSearchBox = ({ catalog, onSelectMultiple }: { catalog: CatalogItem[
 export default function NewQuotationPage() {
   const router = useRouter();
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [customers, setCustomers] = useState<{id: string, name: string}[]>([]);
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
   
   const [selectedLead, setSelectedLead] = useState<string>("");
@@ -143,11 +144,12 @@ export default function NewQuotationPage() {
   ]);
 
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
-  const [quickData, setQuickData] = useState({ customerName: "", customerPhone: "", leadTitle: "" });
+  const [quickData, setQuickData] = useState({ customerId: "", customerName: "", customerPhone: "", leadTitle: "" });
   const [isQuickCreating, setIsQuickCreating] = useState(false);
 
   useEffect(() => {
     fetch("/api/leads").then(r => r.json()).then(setLeads);
+    fetch("/api/customers").then(r => r.json()).then(setCustomers);
     fetch("/api/catalog").then(r => r.json()).then(setCatalog);
   }, []);
 
@@ -171,7 +173,7 @@ export default function NewQuotationPage() {
           setSelectedLead(newLead.id);
         }, 50);
         setIsQuickCreateOpen(false);
-        setQuickData({ customerName: "", customerPhone: "", leadTitle: "" });
+        setQuickData({ customerId: "", customerName: "", customerPhone: "", leadTitle: "" });
       }
     } catch (error) {
       console.error(error);
@@ -440,13 +442,33 @@ export default function NewQuotationPage() {
                       </DialogHeader>
                       <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                          <Label>Tên khách hàng *</Label>
-                          <Input value={quickData.customerName} onChange={e => setQuickData({...quickData, customerName: e.target.value})} placeholder="Vd: Công ty ABC" />
+                          <Label>Khách hàng *</Label>
+                          <select 
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            value={quickData.customerId} 
+                            onChange={e => {
+                               const selectedId = e.target.value;
+                               if (selectedId) {
+                                 const selectedName = e.target.options[e.target.selectedIndex].text;
+                                 setQuickData({...quickData, customerId: selectedId, customerName: selectedName});
+                               } else {
+                                 setQuickData({...quickData, customerId: "", customerName: ""});
+                               }
+                            }}
+                          >
+                            <option value="">-- Tạo Khách hàng Mới --</option>
+                            {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                          </select>
+                          {!quickData.customerId && (
+                            <Input className="mt-2" value={quickData.customerName} onChange={e => setQuickData({...quickData, customerName: e.target.value})} placeholder="Hoặc nhập tên Khách hàng mới..." />
+                          )}
                         </div>
-                        <div className="space-y-2">
-                          <Label>Số điện thoại</Label>
-                          <Input value={quickData.customerPhone} onChange={e => setQuickData({...quickData, customerPhone: e.target.value})} placeholder="Vd: 09..." />
-                        </div>
+                        {!quickData.customerId && (
+                          <div className="space-y-2">
+                            <Label>Số điện thoại</Label>
+                            <Input value={quickData.customerPhone} onChange={e => setQuickData({...quickData, customerPhone: e.target.value})} placeholder="Vd: 09..." />
+                          </div>
+                        )}
                         <div className="space-y-2">
                           <Label>Tên dự án / Nhu cầu *</Label>
                           <Input value={quickData.leadTitle} onChange={e => setQuickData({...quickData, leadTitle: e.target.value})} placeholder="Vd: Lắp camera văn phòng" />

@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Search, Pencil, Trash2, RotateCcw, Upload, Download, Sparkles, Image as ImageIcon, Archive, Link as LinkIcon } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, RotateCcw, Upload, Download, Sparkles, Image as ImageIcon, Archive, Link as LinkIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -44,6 +44,7 @@ export default function CatalogPage() {
 
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [viewTab, setViewTab] = useState<'active' | 'inactive'>('active');
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -317,6 +318,10 @@ export default function CatalogPage() {
               item.model?.toLowerCase().includes(search.toLowerCase()) ||
               item.description?.toLowerCase().includes(search.toLowerCase())
   );
+
+  const ITEMS_PER_PAGE = 20;
+  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+  const paginatedItems = filteredItems.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
     <div className="space-y-6">
@@ -632,7 +637,7 @@ export default function CatalogPage() {
         </div>
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-zinc-500" />
-          <Input placeholder="Tìm kiếm theo tên, mã..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input placeholder="Tìm kiếm theo tên, mã..." className="pl-9" value={search} onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }} />
         </div>
       </div>
 
@@ -655,12 +660,12 @@ export default function CatalogPage() {
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-10 text-zinc-500">Đang tải dữ liệu...</TableCell>
               </TableRow>
-            ) : filteredItems.length === 0 ? (
+            ) : paginatedItems.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-10 text-zinc-500">Không tìm thấy vật tư nào</TableCell>
               </TableRow>
             ) : (
-              filteredItems.map((item) => (
+              paginatedItems.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">
                     <span className="cursor-pointer text-primary hover:underline" onClick={() => handleOpenEdit(item)}>
@@ -715,6 +720,22 @@ export default function CatalogPage() {
           </TableBody>
         </Table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-end gap-2 mt-4">
+          <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Trang trước
+          </Button>
+          <span className="text-sm text-zinc-500">
+            Trang {currentPage} / {totalPages}
+          </span>
+          <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>
+            Trang sau
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

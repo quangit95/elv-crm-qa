@@ -3,22 +3,37 @@ import { prisma } from '@/lib/prisma';
 
 export async function POST(req: Request) {
   try {
-    const { customerName, customerPhone, leadTitle } = await req.json();
+    const { customerId, customerName, customerPhone, leadTitle } = await req.json();
     
-    // Create customer
-    const customer = await prisma.customer.create({
-      data: {
-        name: customerName || 'Khách hàng mới',
-        phone: customerPhone || '',
-        type: "B2B"
+    let custId = customerId;
+    
+    if (!custId) {
+      let existingCust = null;
+      if (customerName) {
+        existingCust = await prisma.customer.findFirst({
+          where: { name: customerName }
+        });
       }
-    });
+      
+      if (existingCust) {
+        custId = existingCust.id;
+      } else {
+        const customer = await prisma.customer.create({
+          data: {
+            name: customerName || 'Khách hàng mới',
+            phone: customerPhone || '',
+            type: "B2B"
+          }
+        });
+        custId = customer.id;
+      }
+    }
 
     // Create lead
     const lead = await prisma.lead.create({
       data: {
         title: leadTitle || 'Dự án mới',
-        customerId: customer.id,
+        customerId: custId,
         status: "NEW"
       },
       include: { customer: true }
