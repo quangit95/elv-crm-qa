@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Search, Pencil, Trash2, RotateCcw, Upload, Download, Sparkles, Image as ImageIcon, Archive } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, RotateCcw, Upload, Download, Sparkles, Image as ImageIcon, Archive, Link as LinkIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -57,6 +57,50 @@ export default function CatalogPage() {
   const [aiPreviewUrl, setAiPreviewUrl] = useState<string>("");
   const [isAiProcessing, setIsAiProcessing] = useState(false);
   const [aiExtractedItems, setAiExtractedItems] = useState<any[]>([]);
+
+  // Link Import state
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
+  const [isLinkProcessing, setIsLinkProcessing] = useState(false);
+
+  const handleProcessLink = async () => {
+    if (!linkUrl) return;
+    setIsLinkProcessing(true);
+    try {
+      const res = await fetch("/api/catalog/ai-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: linkUrl })
+      });
+      const data = await res.json();
+      if (res.ok && data.data) {
+        const item = data.data;
+        // Close link dialog and open Add dialog with populated data
+        setLinkOpen(false);
+        setEditingId(null);
+        setFormData({
+          name: item.name || "",
+          description: item.description || "",
+          model: item.model || "",
+          categoryId: item.categoryId || "",
+          brandId: item.brandId || "",
+          supplierId: "",
+          costPrice: item.costPrice || 0,
+          sellingPrice: item.costPrice ? Math.round((item.costPrice * 1.3) / 1000) * 1000 : 0,
+          unit: "Cái",
+          warranty: 12,
+          image: item.image || ""
+        });
+        setOpen(true);
+      } else {
+        alert("Lỗi phân tích Link: " + (data.error || "Không rõ nguyên nhân"));
+      }
+    } catch (e) {
+      alert("Lỗi kết nối máy chủ");
+    } finally {
+      setIsLinkProcessing(false);
+    }
+  };
 
   const handleProcessAI = async () => {
     if (!aiFile) return;
@@ -283,6 +327,39 @@ export default function CatalogPage() {
         </div>
         
         <div className="flex gap-2">
+          <Dialog open={linkOpen} onOpenChange={(val) => {
+            setLinkOpen(val);
+            if (!val) setLinkUrl("");
+          }}>
+            <DialogTrigger render={<Button variant="outline" className="border-blue-200 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20" />}>
+              <LinkIcon className="mr-2 h-4 w-4" />
+              Nhập từ Link
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Nhập thông tin sản phẩm từ Link</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Đường dẫn sản phẩm (URL)</Label>
+                  <Input 
+                    placeholder="https://..." 
+                    value={linkUrl} 
+                    onChange={e => setLinkUrl(e.target.value)} 
+                  />
+                  <p className="text-xs text-zinc-500">Hệ thống sẽ tự động lấy Tên, Mô tả, Mã, Giá và phân loại Danh mục/Thương hiệu.</p>
+                </div>
+                <Button 
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
+                  onClick={handleProcessLink} 
+                  disabled={!linkUrl || isLinkProcessing}
+                >
+                  {isLinkProcessing ? "Đang phân tích..." : "Phân tích (AI)"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
           <Dialog open={aiOpen} onOpenChange={(val) => {
             setAiOpen(val);
             if (!val) { setAiFile(null); setAiPreviewUrl(""); setAiExtractedItems([]); }

@@ -9,7 +9,7 @@ const toRoman = (num: number): string => {
 }
 
 export async function generateQuotationPDF(quotation: any, company: any): Promise<NextResponse> {
-  return new Promise((resolve) => {
+  return new Promise(async (resolve) => {
     // A4 size: 595.28 x 841.89
     const doc = new PDFDocument({ margin: 30, size: 'A4' })
     const buffers: Buffer[] = []
@@ -144,7 +144,7 @@ export async function generateQuotationPDF(quotation: any, company: any): Promis
 
     let sectionIndex = 1
 
-    quotation.sections.forEach((section: any) => {
+    for (const section of quotation.sections) {
       checkPageBreak(20)
       
       // Section Header
@@ -164,24 +164,36 @@ export async function generateQuotationPDF(quotation: any, company: any): Promis
       doc.text(section.name, 50, y + 6)
       
       let sectionTotal = 0
-      section.items.forEach((item: any) => { sectionTotal += item.total })
+      for (const item of section.items) { sectionTotal += item.total; }
       
       doc.text(sectionTotal.toLocaleString('vi-VN'), 485, y + 6, { width: 75, align: 'right' })
       
       y += 20
 
       let itemStt = 1
-      section.items.forEach((item: any) => {
+      for (const item of section.items) {
         setFont('normal', 8)
         
-        let imgPath = null;
+        let imgData: string | Buffer | null = null;
         let imgHeight = 0;
-        if (item.catalogItem?.image && item.catalogItem.image.startsWith('/uploads')) {
-          imgPath = path.join(process.cwd(), 'public', item.catalogItem.image);
-          if (fs.existsSync(imgPath)) {
-            imgHeight = 60;
-          } else {
-            imgPath = null;
+        if (item.catalogItem?.image) {
+          if (item.catalogItem.image.startsWith('http')) {
+            try {
+              const imgRes = await fetch(item.catalogItem.image);
+              if (imgRes.ok) {
+                const arrBuffer = await imgRes.arrayBuffer();
+                imgData = Buffer.from(arrBuffer);
+                imgHeight = 60;
+              }
+            } catch (e) {
+              console.error('Failed to fetch image for PDF', e);
+            }
+          } else if (item.catalogItem.image.startsWith('/uploads')) {
+            const imgPath = path.join(process.cwd(), 'public', item.catalogItem.image);
+            if (fs.existsSync(imgPath)) {
+              imgData = imgPath;
+              imgHeight = 60;
+            }
           }
         }
 
@@ -189,7 +201,7 @@ export async function generateQuotationPDF(quotation: any, company: any): Promis
         const descText = item.catalogItem?.description || ''
         const descH = doc.heightOfString(descText, { width: 195 })
         
-        const nameColH = nameH + (imgPath ? imgHeight + 4 : 0);
+        const nameColH = nameH + (imgData ? imgHeight + 4 : 0);
         const rowH = Math.max(nameColH, descH, 15) + 8 // Padding
         
         checkPageBreak(rowH)
@@ -199,8 +211,8 @@ export async function generateQuotationPDF(quotation: any, company: any): Promis
         doc.text((itemStt++).toString(), 30, y + 4, { width: 15, align: 'center' })
         doc.text(item.name, 48, y + 4, { width: 100 })
         
-        if (imgPath) {
-           doc.image(imgPath, 48, y + 4 + nameH + 2, { fit: [90, imgHeight], align: 'center' })
+        if (imgData) {
+           doc.image(imgData, 48, y + 4 + nameH + 2, { fit: [90, imgHeight], align: 'center' })
         }
 
         doc.text(descText, 153, y + 4, { width: 195 })
@@ -211,8 +223,8 @@ export async function generateQuotationPDF(quotation: any, company: any): Promis
         doc.text(item.total.toLocaleString('vi-VN'), 485, y + 4, { width: 75, align: 'right' })
 
         y += rowH
-      })
-    })
+      }
+    }
 
     // Totals
     const drawTotalRow = (label: string, value: string, bold: boolean) => {
@@ -248,9 +260,11 @@ export async function generateQuotationPDF(quotation: any, company: any): Promis
     doc.text('- Giá đã bao gồm: phí vận chuyển, và hỗ trợ tại chỗ', boxX, y)
     y += 15
     if (quotation.tax > 0) {
-      doc.text(`- Chưa bao gồm ${quotation.tax}% VAT`, boxX, y)
-      y += 15
+      doc.text(`- Báo giá đã bao gồm ${quotation.tax}% VAT`, boxX, y)
+    } else {
+      doc.text('- Báo giá chưa bao gồm 8% VAT', boxX, y)
     }
+    y += 15
     doc.text('- Báo giá này có giá trị trong vòng 30 ngày', boxX, y)
 
     doc.end()
