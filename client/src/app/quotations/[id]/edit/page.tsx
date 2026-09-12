@@ -168,11 +168,12 @@ export default function EditQuotationPage() {
               id: sec.id,
               name: sec.name,
               items: sec.items.map((item: any) => ({
-                catalogItemId: item.catalogItemId,
-                name: item.name,
-                quantity: item.quantity,
-                unitPrice: item.unitPrice,
-                costPrice: item.costPrice
+                catalogItemId: item.catalogItemId || "",
+                name: item.name || "",
+                unit: item.unit || "",
+                quantity: item.quantity || 1,
+                unitPrice: item.unitPrice || 0,
+                costPrice: item.costPrice || 0
               }))
             })));
           }
@@ -202,19 +203,14 @@ export default function EditQuotationPage() {
       if (s.id === sectionId) {
         const updatedItems = [...s.items];
         itemsToAdd.forEach(c => {
-          const existingIdx = updatedItems.findIndex(i => i.catalogItemId === c.id);
-          if (existingIdx >= 0) {
-            updatedItems[existingIdx].quantity += 1;
-          } else {
-            updatedItems.push({
-              catalogItemId: c.id,
-              name: c.name,
-              unit: c.unit,
-              quantity: 1,
-              unitPrice: c.sellingPrice,
-              costPrice: c.costPrice
-            });
-          }
+          updatedItems.push({
+            catalogItemId: c.id,
+            name: c.name,
+            unit: c.unit,
+            quantity: 1,
+            unitPrice: c.sellingPrice,
+            costPrice: c.costPrice
+          });
         });
         return { ...s, items: updatedItems };
       }
@@ -381,14 +377,14 @@ export default function EditQuotationPage() {
                       <div key={iIdx} className="grid grid-cols-[minmax(200px,1fr)_60px_70px_110px_110px_40px] gap-2 items-center py-1.5 border-b border-zinc-200 dark:border-zinc-800 last:border-b-0">
                         <div className="font-medium text-sm">
                           <Input 
-                            value={item.name} 
+                            value={item.name || ""} 
                             onChange={e => updateItem(section.id, iIdx, 'name', e.target.value)}
                             className="h-8 font-medium bg-transparent border-transparent hover:border-input focus:border-input px-1"
                           />
                         </div>
                         <div>
                           <Input 
-                            value={item.unit}
+                            value={item.unit || ""}
                             onChange={e => updateItem(section.id, iIdx, 'unit', e.target.value)}
                             className="h-8 text-center bg-transparent border-transparent hover:border-input focus:border-input px-1"
                           />
@@ -396,7 +392,7 @@ export default function EditQuotationPage() {
                         <div>
                           <Input 
                             type="number" 
-                            value={item.quantity} 
+                            value={item.quantity || 0} 
                             onChange={e => updateItem(section.id, iIdx, 'quantity', Number(e.target.value))}
                             className="h-8 text-center px-1 bg-transparent hover:border-input focus:border-input border-transparent"
                           />
@@ -404,7 +400,7 @@ export default function EditQuotationPage() {
                         <div>
                           <Input 
                             type="number" 
-                            value={item.unitPrice} 
+                            value={item.unitPrice || 0} 
                             onChange={e => updateItem(section.id, iIdx, 'unitPrice', Number(e.target.value))}
                             className="h-8 text-right px-1 bg-transparent hover:border-input focus:border-input border-transparent"
                           />
